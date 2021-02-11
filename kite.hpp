@@ -6,16 +6,14 @@
 #include "constants.hpp"
 
 class kite{
-  /*vect position;
-  vect velocity; //derivative of position*/
 
   public:
 
   vect position;
-  vect velocity; //derivative of position
+  vect velocity;
 
-  kite()=default;
-  kite(vect v1, vect v2): position{v1}, velocity{v2} {}
+  kite() : position{}, velocity{} {};
+  kite(vect initial_position, vect initial_velocity): position{initial_position}, velocity{initial_velocity} {}
   ~kite()=default;
 
 
@@ -30,11 +28,32 @@ class kite{
   }
 
   const vect compute_force() const{
-    double f_grav_theta=(m+rho*pi*position.r*pow(dl, 2)/4)*g*sin(position.theta);
-    double f_grav_phi=0;
-    double f_grav_r=-(m+rho*pi*position.r*pow(dl, 2)/4)*g*cos(position.theta);
-    const vect f(f_grav_theta, f_grav_phi, f_grav_r);
-    return f;
+    vect f_grav;
+    vect f_app;
+    vect f_aer;
+    vect f_trac;
+
+    f_grav.theta=(m+rho*pi*position.r*pow(dl, 2)/4)*g*sin(position.theta);
+    f_grav.phi=0;
+    f_grav.r=-(m+rho*pi*position.r*pow(dl, 2)/4)*g*cos(position.theta);
+    f_app.theta=m*(pow(velocity.phi, 2)*position.r*sin(position.theta)*cos(position.theta)-2*velocity.r*velocity.theta);
+    f_app.phi=m*(-2*velocity.r*velocity.phi*sin(position.theta)-2*velocity.phi*velocity.theta*position.r*cos(position.theta));
+    f_app.r=m*(position.r*pow(velocity.theta, 2)+position.r*pow(velocity.phi, 2)*pow(sin(position.theta), 2));
+    /*f_aer.theta=
+    f_aer.phi=
+    f_aer.r=
+    f_trac.theta=0;
+    f_trac.phi=0;
+    f_trac.r=*/
+
+    return f_grav+f_app+f_aer+f_trac;
   }
+
+  void simulate(const double step, const int duration){
+    for(int i=0; i<duration; i++){
+      update_state(step);
+    }
+  }
+
 };
 #endif
