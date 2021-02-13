@@ -12,7 +12,7 @@ class kite{
   vect position;
   vect velocity;
 
-  kite() : position{}, velocity{} {};
+  kite()=default;
   kite(vect initial_position, vect initial_velocity): position{initial_position}, velocity{initial_velocity} {}
   ~kite()=default;
 

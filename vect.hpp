@@ -11,7 +11,18 @@ struct vect{
 
   vect(double c1, double c2, double c3): theta{c1}, phi{c2}, r{c3} {}
 
-  vect operator +(const vect& v) const {
+  vect(const vect& v)=default;
+
+  vect& operator =(const vect& v){
+    if(v!=*this){
+      theta=v.theta;
+      phi=v.phi;
+      r=v.r;
+    }
+    return *this;
+  }
+
+  const vect operator +(const vect& v) const{
     return vect{theta+v.theta, phi+v.phi, r+v.r};
   }
 
@@ -22,17 +33,26 @@ struct vect{
     return *this;
   }
 
-  bool operator==(const vect& v){
+  const vect cross(const vect& v) const{
+    return vect{phi*v.r-r*v.phi, r*v.theta-theta*v.r, theta*v.phi-phi*v.theta};
+  }
+
+  const double dot(const vect& v) const{
+    return theta*v.theta+phi*v.phi+r*v.r;
+  }
+
+  const bool operator==(const vect& v) const{
     return (theta==v.theta && phi==v.phi && r==v.r);
   }
 
-  bool operator!=(const vect& v){
+  const bool operator!=(const vect& v) const{
     return !(*this==v);
   }
 
-  friend std::ostream& operator<<(std::ostream& out, const vect& v){
-    return out<<v.theta<<", "<<v.phi<<", "<<v.r;
-  }
-
 };
+
+std::ostream& operator<<(std::ostream& out, const vect& v){
+  return out<<v.theta<<", "<<v.phi<<", "<<v.r;
+}
+
 #endif
