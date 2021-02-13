@@ -27,7 +27,7 @@ class kite{
     velocity.r+=f.r/m;
   }
 
-  const vect compute_force() const{
+  vect compute_force() const{
     vect f_grav;
     vect f_app;
     vect f_aer;

@@ -24,3 +24,5 @@ clean:
 		rm -f $(EXE) *~
 
 .PHONY: clean
+
+main.x: kite.hpp constants.hpp vect.hpp

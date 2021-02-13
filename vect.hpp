@@ -22,7 +22,7 @@ struct vect{
     return *this;
   }
 
-  const vect operator +(const vect& v) const{
+  vect operator +(const vect& v) const{
     return vect{theta+v.theta, phi+v.phi, r+v.r};
   }
 
@@ -33,19 +33,19 @@ struct vect{
     return *this;
   }
 
-  const vect cross(const vect& v) const{
+  vect cross(const vect& v) const{
     return vect{phi*v.r-r*v.phi, r*v.theta-theta*v.r, theta*v.phi-phi*v.theta};
   }
 
-  const double dot(const vect& v) const{
+  double dot(const vect& v) const{
     return theta*v.theta+phi*v.phi+r*v.r;
   }
 
-  const bool operator==(const vect& v) const{
+  bool operator==(const vect& v) const{
     return (theta==v.theta && phi==v.phi && r==v.r);
   }
 
-  const bool operator!=(const vect& v) const{
+  bool operator!=(const vect& v) const{
     return !(*this==v);
   }
 
