@@ -14,6 +14,8 @@ int main(){
   force+=force2;
   vect cross_product;
   cross_product=force.cross(force2);
+  cross_product/=3;
+  cross_product-=cross_product;
   std::cout<<cross_product<<"\n";
 
 }

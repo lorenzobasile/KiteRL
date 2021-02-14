@@ -49,6 +49,19 @@ class kite{
     return f_grav+f_app+f_aer+f_trac;
   }
 
+  vect aerodynamic_force() const{
+
+    /*
+    vect e_w=W_e-e_r*(e_r.dot(W_e))
+    double psi=asin(delta_l/d);
+    double eta=asin(W_e.dot(e_r)*tan(psi)/e_w.norm());
+    e_w=e_w/e_w.norm();
+    vect x_w=-W_e/W_e.norm();
+    vect y_w=e_w*(-cos(psi)*sin(eta))+(e_r.cross_product(e_w))*(cos(psi)*cos(eta))+e_r*sin(psi);
+    vect z_w=x_w.cross_product(y_w);
+    return -1/2*C_d*A_rho*pow(W_e.norm(), 2)*x_w-1/2*C_l*A_rho*pow(W_e.norm(), 2)*z_w;*/
+  }
+
   void simulate(const double step, const int duration){
     for(int i=0; i<duration; i++){
       update_state(step);
