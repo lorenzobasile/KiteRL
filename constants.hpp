@@ -2,10 +2,16 @@
 #define _constants
 
 #define pi 3.1415
-#define m 1
-#define dl 1
-#define rho 1
+#define m 50
+#define dl 0.025
+#define rhol 970
 #define g 9.8
+#define d 3
+#define delta_l 0.2
+#define A 100
+#define rho 1.2
+#define C_d 0.05
+#define C_l 0.5
 
 
 #endif
