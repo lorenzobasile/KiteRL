@@ -93,7 +93,7 @@ vect operator *(const double s, const vect& v){
 }
 
 std::ostream& operator<<(std::ostream& out, const vect& v){
-  return out<<v.theta<<", "<<v.phi<<", "<<v.r;
+  return out<<v.theta<<" "<<v.phi<<" "<<v.r;
 }
 
 #endif
