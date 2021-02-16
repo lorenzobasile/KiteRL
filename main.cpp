@@ -6,5 +6,5 @@ int main(){
   std::cout<<initial_position.r<<"\n";
   vect initial_velocity{0, 0, 0};
   kite k{initial_position, initial_velocity};
-  k.simulate(1,20);
+  k.simulate(0.01,20);
 }

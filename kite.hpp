@@ -19,15 +19,12 @@ class kite{
 
   void update_state(double step){
     const vect f=compute_force();
+    velocity.theta+=f.theta/(m*position.r)*step;
+    velocity.phi+=f.phi/(m*position.r*sin(position.theta))*step;
+    velocity.r+=f.r/m*step;
     position.theta+=velocity.theta*step;
     position.phi+=velocity.phi*step;
-    position.r+=velocity.r*step;
-    if(position.r<0) position.r=0;
-    velocity.theta+=f.theta/(m*position.r);
-    velocity.phi+=f.phi/(m*position.r*sin(position.theta));
-    velocity.r+=f.r/m;
-    position.theta=atan2(sin(position.theta),cos(position.theta)); //?
-    position.phi=atan2(sin(position.phi),cos(position.phi));
+    position.r+=velocity.r*step;  
   }
 
   vect compute_force() const{
