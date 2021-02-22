@@ -25,8 +25,10 @@ class kite{
     position.theta+=velocity.theta*step;
     position.phi+=velocity.phi*step;
     position.r+=velocity.r*step;
-    position.theta=atan2(sin(position.theta),cos(position.theta)); //?
-    position.phi=atan2(sin(position.phi),cos(position.phi));
+    //if(position.theta>=pi/2) position.theta=pi/2;
+    //if(position.theta<=-pi/2) position.theta=-pi/2;
+    //position.theta=atan2(sin(position.theta),cos(position.theta)); //?
+    //position.phi=atan2(sin(position.phi),cos(position.phi));
   }
 
   vect compute_force(const double wind) const{
@@ -46,7 +48,10 @@ class kite{
     f_trac.theta=0;
     f_trac.phi=0;
     f_trac.r=f_grav.r+f_app.r+f_aer.r; //r has no acceleration
-
+    /*std::cout<<f_grav<<std::endl;
+    std::cout<<f_app<<std::endl;
+    std::cout<<f_aer<<std::endl;
+    std::cout<<f_trac<<std::endl;*/
     return f_grav+f_app+f_aer-f_trac;
   }
 
@@ -66,13 +71,13 @@ class kite{
     vect x_w=-W_e/W_e.norm();
     vect y_w=e_w*(-cos(psi)*sin(eta))+(e_r.cross(e_w))*(cos(psi)*cos(eta))+e_r*sin(psi);
     vect z_w=x_w.cross(y_w);
-    return -1.0/2*C_d*A*rho*pow(W_e.norm(), 2)*x_w-1.0/2*C_l*A*rho*pow(W_e.norm(), 2)*z_w;
+    return -1.0/2*C_d*A*rho*pow(W_e.norm(), 2)*x_w+1.0/2*C_l*A*rho*pow(W_e.norm(), 2)*z_w;
   }
 
   void simulate(const double step, const int duration, const double wind){
     for(int i=0; i<duration; i++){
       update_state(step, wind);
-      if(i%100==0)std::cout<<"Position at step "<<i<<": "<<position<<std::endl;
+      if(i%1==0)std::cout<<"Position at step "<<i<<": "<<position<<std::endl;
     }
   }
 
