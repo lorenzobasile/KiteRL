@@ -57,9 +57,9 @@ class kite{
 
   vect aerodynamic_force(const vect& wind_vect) const{
     vect W_l{//for wind theta=x, phi=y, r=z
-      wind_vect.theta*cos(position.theta)*cos(position.phi)+wind_vect.phi*cos(position.theta)*sin(position.phi)-wind_vect.r*sin(position.theta),
-      -wind_vect.theta*sin(position.phi)+wind_vect.phi*cos(position.phi),
-      wind_vect.theta*sin(position.theta)*cos(position.phi)+wind_vect.phi*sin(position.theta)*sin(position.phi)+wind_vect.r*cos(position.theta)
+      wind_vect.x()*cos(position.theta)*cos(position.phi)+wind_vect.y()*cos(position.theta)*sin(position.phi)-wind_vect.z()*sin(position.theta),
+      -wind_vect.x()*sin(position.phi)+wind_vect.y()*cos(position.phi),
+      wind_vect.x()*sin(position.theta)*cos(position.phi)+wind_vect.y()*sin(position.theta)*sin(position.phi)+wind_vect.z()*cos(position.theta)
     };
     vect W_a{velocity.theta*position.r, velocity.phi*position.r*sin(position.theta), velocity.r};
     vect W_e=W_l-W_a;

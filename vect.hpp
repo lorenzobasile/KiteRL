@@ -22,6 +22,16 @@ struct vect{
     }
     return *this;
   }
+  //functions for cartesian vectors
+  double x() const{
+    return theta;
+  }
+  double y() const{
+    return phi;
+  }
+  double z() const{
+    return r;
+  }
 
   vect operator +(const vect& v) const{
     return vect{theta+v.theta, phi+v.phi, r+v.r};
