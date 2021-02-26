@@ -95,6 +95,7 @@ struct vect{
     return (*this)*=(1/s);
   }
 
+
 };
 
 

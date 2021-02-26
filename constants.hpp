@@ -2,7 +2,7 @@
 #define _constants
 
 #define pi 3.1415
-#define m 50
+#define m 0.5
 #define dl 0.025
 #define rhol 970
 #define g 9.8
