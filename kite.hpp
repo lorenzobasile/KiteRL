@@ -17,46 +17,39 @@ class kite{
   ~kite()=default;
 
 
-  void update_state(const double step, const double wind){
+  bool update_state(const double step, const vect& wind){
     const vect f=compute_force(wind);
-    velocity.theta+=f.theta/(m*position.r)*step;
-    velocity.phi+=f.phi/(m*position.r*sin(position.theta))*step;
-    velocity.r+=f.r/m*step;
-    position.theta+=velocity.theta*step;
-    position.phi+=velocity.phi*step;
-    position.r+=velocity.r*step;
-    //if(position.theta>=pi/2) position.theta=pi/2;
-    //if(position.theta<=-pi/2) position.theta=-pi/2;
-    //position.theta=atan2(sin(position.theta),cos(position.theta)); //?
-    //position.phi=atan2(sin(position.phi),cos(position.phi));
+
+    velocity.theta+=(f.theta/(m*position.r)*step);
+    velocity.phi+=(f.phi/(m*position.r*sin(position.theta))*step);
+    velocity.r+=(f.r/m*step);
+    position.theta+=(velocity.theta*step);
+    position.phi+=(velocity.phi*step);
+    position.r+=(velocity.r*step);
+    if(position.theta>=pi/2) return false;
+    return true;
   }
 
-  vect compute_force(const double wind) const{
+  vect compute_force(const vect& wind) const{
     vect f_grav;
     vect f_app;
     vect f_aer;
     vect f_trac;
 
-    vect constant_horizontal_wind{wind,0,0};
     f_grav.theta=(m+rhol*pi*position.r*pow(dl, 2)/4)*g*sin(position.theta);
     f_grav.phi=0;
     f_grav.r=-(m+rhol*pi*position.r*pow(dl, 2)/4)*g*cos(position.theta);
     f_app.theta=m*(pow(velocity.phi, 2)*position.r*sin(position.theta)*cos(position.theta)-2*velocity.r*velocity.theta);
     f_app.phi=m*(-2*velocity.r*velocity.phi*sin(position.theta)-2*velocity.phi*velocity.theta*position.r*cos(position.theta));
     f_app.r=m*(position.r*pow(velocity.theta, 2)+position.r*pow(velocity.phi, 2)*pow(sin(position.theta), 2));
-    f_aer=aerodynamic_force(constant_horizontal_wind);
-    //std::cout<<"Aero force: "<<f_aer<<std::endl;
+    f_aer=aerodynamic_force(wind);
     f_trac.theta=0;
     f_trac.phi=0;
     f_trac.r=f_grav.r+f_app.r+f_aer.r; //r has no acceleration
-    /*std::cout<<f_grav<<std::endl;
-    std::cout<<f_app<<std::endl;
-    std::cout<<f_aer<<std::endl;
-    std::cout<<f_trac<<std::endl;*/
     return f_grav+f_app+f_aer-f_trac;
   }
 
-  /*vect aerodynamic_force(const vect& wind_vect) const{
+  vect aerodynamic_force(const vect& wind_vect) const{
     vect W_l{//for wind theta=x, phi=y, r=z
       wind_vect.x()*cos(position.theta)*cos(position.phi)+wind_vect.y()*cos(position.theta)*sin(position.phi)-wind_vect.z()*sin(position.theta),
       -wind_vect.x()*sin(position.phi)+wind_vect.y()*cos(position.phi),
@@ -65,7 +58,6 @@ class kite{
     vect W_a{velocity.theta*position.r, velocity.phi*position.r*sin(position.theta), velocity.r};
     vect W_e=W_l-W_a;
     vect e_r{sin(position.theta)*cos(position.phi), sin(position.theta)*sin(position.phi), cos(position.theta)};
-    //vect e_r{0, 0, 1};
     vect e_w=W_e-e_r*(e_r.dot(W_e));
     double psi=asin(delta_l/d);
     double eta=asin(W_e.dot(e_r)*tan(psi)/e_w.norm());
@@ -73,13 +65,12 @@ class kite{
     vect x_w=-W_e/W_e.norm();
     vect y_w=e_w*(-cos(psi)*sin(eta))+(e_r.cross(e_w))*(cos(psi)*cos(eta))+e_r*sin(psi);
     vect z_w=x_w.cross(y_w);
-    return -1.0/2*C_d*A*rho*pow(W_e.norm(), 2)*x_w+1.0/2*C_l*A*rho*pow(W_e.norm(), 2)*z_w;
-  }*/
+    return -1.0/2*C_d*A*rho*pow(W_e.norm(), 2)*x_w-1.0/2*C_l*A*rho*pow(W_e.norm(), 2)*z_w;
+  }
 
 
+  /* EQUIVALENT FORMULATION
   vect aerodynamic_force(const vect& wind_vect) const{
-    //vect e_theta={cos(position.theta)*cos(position.phi), cos(position.theta)*sin(position.phi), -sin(position.theta)};
-    //vect e_phi={-sin(position.phi), cos(position.phi), 0};
     vect w_l{//for wind theta=x, phi=y, r=z
       wind_vect.x()*cos(position.theta)*cos(position.phi)+wind_vect.y()*cos(position.theta)*sin(position.phi)-wind_vect.z()*sin(position.theta),
       -wind_vect.x()*sin(position.phi)+wind_vect.y()*cos(position.phi),
@@ -88,7 +79,6 @@ class kite{
     vect w_a{velocity.theta*position.r, velocity.phi*position.r*sin(position.theta), velocity.r};
     vect w_e=w_l-w_a;
     vect e_r{sin(position.theta)*cos(position.phi), sin(position.theta)*sin(position.phi), cos(position.theta)};
-    //vect e_r{0, 0, 1};
     vect e_l=w_e/w_e.norm();
     vect w_ep=w_e-e_r*(e_r.dot(w_e));
     vect e_w=w_ep/w_ep.norm();
@@ -98,16 +88,13 @@ class kite{
     vect e_t=e_w*(-cos(psi)*sin(eta))+e_0*(cos(psi)*cos(eta))+e_r*sin(psi);
     double F_l=1.0/2*rho*pow(w_e.norm(), 2)*A*C_l;
     double F_d=1.0/2*rho*pow(w_e.norm(), 2)*A*C_d;
-    //std::cout<<"F_l: "<<F_l<<std::endl<<"F_d: "<<F_d<<std::endl;
-    //std::cout<<"e_t: "<<e_t<<std::endl<<"e_l: "<<e_l<<std::endl;
-    std::cout<<e_t.dot(e_l)<<std::endl;
-    //std::cout<<F_l*(e_l.cross(e_t))<<std::endl<<F_d*e_l<<std::endl;
     return F_l*(e_l.cross(e_t))+F_d*e_l;
-  }
+  }*/
 
-  void simulate(const double step, const int duration, const double wind){
-    for(int i=0; i<duration; i++){
-      update_state(step, wind);
+  void simulate(const double step, const int duration, const vect& wind){
+    int i=0;
+    while(update_state(step, wind) && i<duration){
+      i++;
       if(i%1==0)std::cout<<"Position at step "<<i<<": "<<position<<std::endl;
     }
   }
