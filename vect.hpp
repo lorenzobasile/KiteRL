@@ -94,6 +94,13 @@ struct vect{
   vect& operator /=(const double s){
     return (*this)*=(1/s);
   }
+  vect tocartesian(const vect& pos) const{
+    return vect{
+      cos(pos.theta)*cos(pos.phi)*theta-sin(pos.phi)*phi+sin(pos.theta)*cos(pos.phi)*r,
+      cos(pos.theta)*sin(pos.phi)*theta+cos(pos.phi)*phi+sin(pos.theta)*sin(pos.phi)*r,
+      -sin(pos.theta)*theta+cos(pos.theta)*r
+    };
+  }
 
 
 };
