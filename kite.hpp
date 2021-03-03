@@ -46,10 +46,8 @@ class kite{
     f_trac.theta=0;
     f_trac.phi=0;
     f_trac.r=f_grav.r+f_app.r+f_aer.r; //r has no acceleration
-    /*std::cout<<"f_app: "<<f_app.tocartesian(position)<<std::endl;
-    std::cout<<"f_grav: "<<f_grav.tocartesian(position)<<std::endl;
-    std::cout<<"f_trac: "<<f_trac.tocartesian(position)<<std::endl;*/
-    return f_grav+f_app+f_aer-f_trac;
+    //return f_grav+f_app+f_aer-f_trac;
+    return f_grav+f_app+f_aer;
   }
 
   vect aerodynamic_force(const vect& wind_vect) const{
@@ -61,14 +59,11 @@ class kite{
     vect W_a{velocity.theta*position.r, velocity.phi*position.r*sin(position.theta), velocity.r};
     vect W_e=W_l-W_a;
     vect e_r{0,0,1};
-    //vect e_r{sin(position.theta)*cos(position.phi), sin(position.theta)*sin(position.phi), cos(position.theta)};
     vect e_w=W_e-e_r*(e_r.dot(W_e));
     double psi=asin(delta_l/d);
-    //std::cout<<"arcsin arg: "<<W_e.dot(e_r)*tan(psi)/e_w.norm()<<std::endl;
     double eta=asin(W_e.dot(e_r)*tan(psi)/e_w.norm());
-    //std::cout<<"e_w: "<<e_w<<" "<<e_w.norm()<<std::endl;
     e_w=e_w/e_w.norm();
-    //std::cout<<"W_e: "<<W_e<<" "<<W_e.norm()<<std::endl;
+    if(W_e==vect{0,0,0} || abs(W_e.dot(e_r)/W_e.dot(e_w)*tan(psi))>1) throw ("Aborting simulation");
     vect x_w=-W_e/W_e.norm();
     vect y_w=e_w*(-cos(psi)*sin(eta))+(e_r.cross(e_w))*(cos(psi)*cos(eta))+e_r*sin(psi);
     vect z_w=x_w.cross(y_w);
@@ -76,7 +71,6 @@ class kite{
     vect drag=-1.0/2*C_d*A*rho*pow(W_e.norm(), 2)*x_w;
     std::cout<<"lift: "<<lift.tocartesian(position)<<std::endl;
     std::cout<<"drag: "<<drag.tocartesian(position)<<std::endl;
-    //std::cout<<"x_w: "<<x_w<<std::endl<<"y_w: "<<y_w<<std::endl<<"z_w: "<<z_w<<std::endl;
     return drag+lift;
   }
 
@@ -110,7 +104,6 @@ class kite{
       if(i%1==0)std::cout<<"Position at step "<<i<<": "<<position<<std::endl;
       continuation=update_state(step, wind);
       i++;
-      //if(!continuation) std::cout<<"Final position: "<<position.tocartesian()<<std::endl;
     }
   }
 

@@ -8,5 +8,9 @@ int main(int argc, char* argv[]){
   vect initial_position{pi/3, pi/24, 10};
   vect initial_velocity{0, 0, 0};
   kite k{initial_position, initial_velocity};
-  k.simulate(0.001,600000, wind);//simulating for 10 minutes
+  try{
+    k.simulate(0.001,600000, wind);//simulating for 10 minutes
+  } catch(const char* exc) {
+    std::cout<<exc<<std::endl;
+  }
 }
