@@ -101,8 +101,6 @@ struct vect{
       -sin(pos.theta)*theta+cos(pos.theta)*r
     };
   }
-
-
 };
 
 
