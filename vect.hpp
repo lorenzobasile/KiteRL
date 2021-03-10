@@ -68,11 +68,11 @@ struct vect{
     return sqrt(pow(theta, 2)+pow(phi, 2)+pow(r, 2));
   }
 
-  bool operator==(const vect& v) const{
+  bool operator ==(const vect& v) const{
     return (theta==v.theta && phi==v.phi && r==v.r);
   }
 
-  bool operator!=(const vect& v) const{
+  bool operator !=(const vect& v) const{
     return !(*this==v);
   }
 

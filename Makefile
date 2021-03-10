@@ -1,6 +1,7 @@
 SRC = main.cpp
 CXX = g++
 CXXFLAGS = -std=c++14
+LIBFLAGS = --target=x86_64-apple-darwin -shared -fpic -o
 EXE = $(SRC:.cpp=.x)
 
 .SUFFIXES:
@@ -18,11 +19,16 @@ all: $(EXE)
 
 	$(CXX) $< -o $@ $(CXXFLAGS)
 
+libkite.so: libkite.cpp
+			$(CXX) $(LIBFLAGS) $@ $< $(CXXFLAGS)
 
 
 clean:
 		rm -f $(EXE) *~
+		rm libkite.so
 
 .PHONY: clean
 
 main.x: kite.hpp constants.hpp vect.hpp
+
+libkite.so: kite.hpp constants.hpp vect.hpp
