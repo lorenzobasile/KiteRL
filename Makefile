@@ -1,6 +1,6 @@
 SRC = main.cpp
 CXX = g++
-CXXFLAGS = -O3 -std=c++14
+CXXFLAGS = -O3 -std=c++14 -Ienv
 LIBFLAGS = --target=x86_64-apple-darwin -Wno-return-type-c-linkage -shared -fpic -o
 EXE = $(SRC:.cpp=.x)
 
@@ -9,6 +9,7 @@ SUFFIXES =
 
 .SUFFIXES: .cpp .x
 
+VPATH = env
 
 all: $(EXE) libkite.so
 
