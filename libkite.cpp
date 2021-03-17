@@ -7,12 +7,15 @@ extern "C" {
   kite init_kite(vect p, vect v){
     return kite{p, v};
   }
-  void simulate(kite k, const double step, const int duration, const vect wind){
+  bool simulation_step(kite* k, const double step, const vect wind){
+    bool continuation=true;
     try{
-      k.simulate(step, duration, wind);//simulating for 10 minutes
+      continuation=k->update_state(step, wind);
     } catch(const char* exc) {
+      continuation=false;
       std::cout<<exc<<std::endl;
     }
+    return continuation;
   }
 
 }

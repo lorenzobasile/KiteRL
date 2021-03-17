@@ -25,7 +25,7 @@ class kite{
     position.theta+=(velocity.theta*step);
     position.phi+=(velocity.phi*step);
     position.r+=(velocity.r*step);
-    std::cout<<"Power: "<<velocity.r*t.r<<std::endl;
+    //std::cout<<"Power: "<<velocity.r*t.r<<std::endl;
     if(position.theta>=pi/2) return false;
     return true;
   }
@@ -68,8 +68,8 @@ class kite{
     vect z_w=x_w.cross(y_w);
     vect lift=-1.0/2*C_l*A*rho*pow(W_e.norm(), 2)*z_w;
     vect drag=-1.0/2*C_d*A*rho*pow(W_e.norm(), 2)*x_w;
-    std::cout<<"lift: "<<lift.tocartesian(position)<<std::endl;
-    std::cout<<"drag: "<<drag.tocartesian(position)<<std::endl;
+    //std::cout<<"lift: "<<lift.tocartesian(position)<<std::endl;
+    //std::cout<<"drag: "<<drag.tocartesian(position)<<std::endl;
     return drag+lift;
   }
 

@@ -2,7 +2,6 @@
 #include <iostream>
 
 int main(int argc, char* argv[]){
-  //KITE SIMULATION
   double wind_speed_x=atol(argv[1]);
   vect wind{wind_speed_x, 0, 0};
   vect initial_position{pi/3, pi/24, 10};

@@ -1,7 +1,7 @@
 SRC = main.cpp
 CXX = g++
-CXXFLAGS = -std=c++14
-LIBFLAGS = --target=x86_64-apple-darwin -shared -fpic -o
+CXXFLAGS = -O3 -std=c++14
+LIBFLAGS = --target=x86_64-apple-darwin -Wno-return-type-c-linkage -shared -fpic -o
 EXE = $(SRC:.cpp=.x)
 
 .SUFFIXES:
@@ -10,7 +10,7 @@ SUFFIXES =
 .SUFFIXES: .cpp .x
 
 
-all: $(EXE)
+all: $(EXE) libkite.so
 
 
 .PHONY: all
