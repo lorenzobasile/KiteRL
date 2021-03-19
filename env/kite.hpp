@@ -15,8 +15,8 @@ class kite{
   ~kite()=default;
 
 
-  bool update_state(const double step, const vect& wind){
-    vect f=compute_force(wind);
+  bool update_state(const double step, const vect& wind, const double C_l=1.5, const double C_d=0.29, const double psi=0.2){
+    vect f=compute_force(wind, C_l, C_d, psi);
     vect t=tension(f);
     f-=t;
     velocity.theta+=(f.theta/(m*position.r)*step);
@@ -30,7 +30,21 @@ class kite{
     return true;
   }
 
-  vect compute_force(const vect& wind) const{
+  double compute_power(const vect& wind, const double C_l, const double C_d, const double psi){
+    vect f=compute_force(wind, C_l, C_d, psi);
+    vect t=tension(f);
+    return velocity.r*t.r;
+  }
+
+  double getbeta(const vect& wind){
+    vect W_a{velocity.theta*position.r, velocity.phi*position.r*sin(position.theta), velocity.r};
+    W_a=W_a.tocartesian(position);
+    vect W_e=wind-W_a;
+    double beta=atan(W_e.z()/(sqrt(pow(W_e.x(), 2)+pow(W_e.y(), 2))));
+    return beta;
+  }
+
+  vect compute_force(const vect& wind, const double C_l, const double C_d, const double psi) const{
     vect f_grav;
     vect f_app;
     vect f_aer;
@@ -40,7 +54,7 @@ class kite{
     f_app.theta=m*(pow(velocity.phi, 2)*position.r*sin(position.theta)*cos(position.theta)-2*velocity.r*velocity.theta);
     f_app.phi=m*(-2*velocity.r*velocity.phi*sin(position.theta)-2*velocity.phi*velocity.theta*position.r*cos(position.theta));
     f_app.r=m*(position.r*pow(velocity.theta, 2)+position.r*pow(velocity.phi, 2)*pow(sin(position.theta), 2));
-    f_aer=aerodynamic_force(wind);
+    f_aer=aerodynamic_force(wind, C_l, C_d, psi);
     return f_grav+f_app+f_aer;
   }
 
@@ -49,7 +63,7 @@ class kite{
     return vect{0,0,forces.r/k};
   }
 
-  vect aerodynamic_force(const vect& wind_vect) const{
+  vect aerodynamic_force(const vect& wind_vect, const double C_l, const double C_d, const double psi) const{
     vect W_l{
       wind_vect.x()*cos(position.theta)*cos(position.phi)+wind_vect.y()*cos(position.theta)*sin(position.phi)-wind_vect.z()*sin(position.theta),
       -wind_vect.x()*sin(position.phi)+wind_vect.y()*cos(position.phi),
@@ -59,7 +73,6 @@ class kite{
     vect W_e=W_l-W_a;
     vect e_r{0,0,1};
     vect e_w=W_e-e_r*(e_r.dot(W_e));
-    double psi=asin(delta_l/d);
     double eta=asin(W_e.dot(e_r)*tan(psi)/e_w.norm());
     e_w=e_w/e_w.norm();
     if(W_e==vect{0,0,0} || abs(W_e.dot(e_r)/W_e.dot(e_w)*tan(psi))>1) throw ("Aborting simulation");
