@@ -24,7 +24,7 @@ extern "C" {
     try{
       while(continuation && i<integration_steps) {
         continuation=k->update_state(step, wind, C_l, C_d, psi);
-        std::cout<<i<<std::endl;
+        //std::cout<<"Integration step "<<i<<std::endl;
         i++;
       }
     } catch(const char* exc) {
