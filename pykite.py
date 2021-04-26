@@ -18,9 +18,8 @@ coefficients=np.array([
     [1.1, 0.18],
     [1.05, 0.21]
 ])
-
-bank_angles=np.array([-15, -10, -5, 0, 5, 10, 15])
-
+bank_angles=np.array([-3, -2, -1, 0, 1, 2, 3])
+n_beta=1
 class vect(Structure):
     _fields_ = [
         ('theta', c_double),
@@ -47,7 +46,8 @@ class kite(Structure):
         psi = np.deg2rad(bank_angles[bank_angle])
         return libkite.simulate(pointer(self), C_l, C_d, psi, integration_steps, step, wind)
     def beta(self, wind):
-        return np.digitize(libkite.getbeta(pointer(self), wind), np.linspace(-np.pi/2, np.pi/2, 10))
+        b=np.digitize(libkite.getbeta(pointer(self), wind), np.linspace(-np.pi/2, np.pi/2, n_beta))
+        return 0
     def reward(self, attack_angle, bank_angle, wind):
         C_l, C_d = coefficients[attack_angle,0], coefficients[attack_angle,1]
         psi = np.deg2rad(bank_angles[bank_angle])

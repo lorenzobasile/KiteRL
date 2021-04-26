@@ -1,86 +1,99 @@
 import numpy as np
 import pykite as pk
+from learning_utils import *
+import matplotlib.pyplot as plt
 
 n_attack=pk.coefficients.shape[0]
 n_bank=pk.bank_angles.shape[0]
-n_beta=10
+n_beta=pk.n_beta
 max_power=8000
-eta=1
+eta0=0.1
 gamma=1
-eps=0.3
-episode_duration=60
+eps0=0.01
+episode_duration=180
 learning_step=0.2
-horizon=episode_duration/learning_step
+horizon=int(episode_duration/learning_step)
 integration_step=0.001
-integration_steps_per_learning_step=learning_step/integration_step
-
-def apply_action(state, action):
-    if action==(1,1):
-        return state[0],state[1]
-    elif action==(0,1):
-        return max(state[0]-1, 0), state[1]
-    elif action==(1,0):
-        return state[0], max(state[1]-1, 0)
-    elif action==(0,0):
-        return max(state[0]-1, 0), max(state[1]-1, 0)
-    elif action==(2,1):
-        return min(state[0]+1, n_attack-1), state[1]
-    elif action==(1,2):
-        return state[0], min(state[1]+1, n_bank-1)
-    elif action==(2,2):
-        return min(state[0]+1, n_attack-1), min(state[1]+1, n_bank-1)
-    elif action==(0,2):
-        return max(state[0]-1, 0), min(state[1]+1, n_bank-1)
-    elif action==(2,0):
-        return min(state[0]+1, n_attack-1), max(state[1]-1, 0)
-
-
-def greedy_action(Q, state):
-    return np.unravel_index(np.argmax(Q[state]), Q[state].shape)
-
-def eps_greedy_policy(Q, state):
-    if np.random.rand() < 1-eps:
-        A_t=greedy_action(Q, S_t)
-    else:
-        A_t=(np.random.randint(3), np.random.randint(3))
-    return A_t
-
-def step(Q, S_t, A_t, R_t1, S_t1, A_t1):
-    Q[S_t+A_t]=Q[S_t+A_t]+eta*(R_t1+gamma*Q[S_t1+A_t1]-Q[S_t+A_t])
-    return Q
-
-def terminal_step(Q, S_t, A_t, R_t1):
-    Q[S_t+A_t]=Q[S_t+A_t]+eta*(R_t1-Q[S_t+A_t])
-    return Q
+integration_steps_per_learning_step=int(learning_step/integration_step)
 
 Q=np.ones((n_attack, n_bank, n_beta, 3, 3))
 Q*=(max_power*2)
 
-
-initial_position=pk.vect(np.pi/3, np.pi/24, 10)
+durations=[]
+rewards=[]
+episodes=6000
+t=0
+for j in range(episodes):
+    cumulative_reward=0
+    initial_position=pk.vect(np.pi/6, 0, 50)
+    initial_velocity=pk.vect(0, 0, 0)
+    wind=pk.vect(5,0,0)
+    k=pk.kite(initial_position, initial_velocity)
+    initial_beta=k.beta(wind)
+    S_t=(14,3,initial_beta)
+    A_t=eps_greedy_policy(Q, S_t, eps0)
+    for i in range(horizon):
+        t+=1
+        eps=scheduling(eps0, t, 100000)
+        eta=scheduling(eta0, t, 500000)
+        new_attack_angle, new_bank_angle=apply_action(S_t, A_t)
+        still_alive=k.evolve_system(new_attack_angle, new_bank_angle, integration_steps_per_learning_step, integration_step, wind)
+        if not still_alive:
+            R_t1 = scheduling(-300000, i, horizon/4)
+            cumulative_reward+=R_t1
+            print(j, "Simulation failed at learning step: ", i, " reward ", cumulative_reward)
+            rewards.append(cumulative_reward)
+            durations.append(i)
+            Q=terminal_step(Q, S_t, A_t, R_t1, eta)
+            break
+        S_t1 = (new_attack_angle, new_bank_angle, k.beta(wind))
+        R_t1 = k.reward(new_attack_angle, new_bank_angle, wind)
+        cumulative_reward+=R_t1
+        A_t1=eps_greedy_policy(Q, S_t1, eps)
+        if i==int(horizon)-1:
+            Q=terminal_step(Q, S_t, A_t, R_t1, eta)
+            print(j, "Simulation ended at learning step: ", i, " reward ", cumulative_reward)
+            rewards.append(cumulative_reward)
+            durations.append(i)
+        else:
+            Q=step(Q, S_t, A_t, R_t1, S_t1, A_t1, eta, gamma)
+        S_t=S_t1
+        A_t=A_t1
+theta=[]
+phi=[]
+r=[]
+initial_position=pk.vect(np.pi/3, 0, 50)
 initial_velocity=pk.vect(0, 0, 0)
-wind=pk.vect(10,0,0)
+wind=pk.vect(5,0,0)
 k=pk.kite(initial_position, initial_velocity)
 initial_beta=k.beta(wind)
-S_t=(10,5,initial_beta)
-print("Initial state: ", S_t)
-
-A_t=eps_greedy_policy(Q, S_t)
-print("Initial action: ", A_t)
-
-for i in range(int(horizon)):
+S_t=(14,3,initial_beta)
+A_t=eps_greedy_policy(Q, S_t, 0)
+for i in range(horizon):
+    theta.append(k.position.theta)
+    phi.append(k.position.phi)
+    r.append(k.position.r)
     new_attack_angle, new_bank_angle=apply_action(S_t, A_t)
-    if not k.evolve_system(new_attack_angle, new_bank_angle, int(integration_steps_per_learning_step), integration_step, wind):
-        R_t1 = -np.inf
-        print(i)
-        Q=terminal_step(Q, S_t, A_t, R_t1)
+    still_alive=k.evolve_system(new_attack_angle, new_bank_angle, integration_steps_per_learning_step, integration_step, wind)
+    if not still_alive:
+        print(j, "Simulation failed at learning step: ", i)
+        print(k.position.theta, k.position.phi, k.position.r)
         break
-    S_t1 = (new_attack_angle, new_bank_angle, k.beta(wind))
-    print("New state: ", S_t1)
-    R_t1 = k.reward(new_attack_angle, new_bank_angle, wind)
-    print("Reward: ", R_t1)
-    A_t1=eps_greedy_policy(Q, S_t1)
-    print("New action: ", A_t1)
-    Q=step(Q, S_t, A_t, R_t1, S_t1, A_t1)
-    S_t=S_t1
-    A_t=A_t1
+    S_t = (new_attack_angle, new_bank_angle, k.beta(wind))
+    A_t=eps_greedy_policy(Q, S_t1, 0)
+    if i==int(horizon)-1:
+        print(j, "Simulation ended at learning step: ", i)
+
+theta=np.array(theta)
+phi=np.array(phi)
+r=np.array(r)
+plot_trajectory(theta, phi, r)
+
+plt.figure()
+plt.plot(durations, 'o')
+plt.plot(np.convolve(durations, np.ones(300), 'valid') / 300)
+plt.show()
+plt.figure()
+plt.plot(rewards, 'o')
+plt.plot(np.convolve(rewards, np.ones(300), 'valid') / 300)
+plt.show()

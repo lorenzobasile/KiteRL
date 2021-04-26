@@ -4,12 +4,8 @@
 int main(int argc, char* argv[]){
   double wind_speed_x=atol(argv[1]);
   vect wind{wind_speed_x, 0, 0};
-  vect initial_position{pi/3, pi/24, 10};
+  vect initial_position{pi/3, 0, 10};
   vect initial_velocity{0, 0, 0};
   kite k{initial_position, initial_velocity};
-  try{
-    k.simulate(0.001,600000, wind);//simulating for 10 minutes
-  } catch(const char* exc) {
-    std::cout<<exc<<std::endl;
-  }
+  k.simulate(0.001,6000, wind);//simulating for 10 minutes
 }

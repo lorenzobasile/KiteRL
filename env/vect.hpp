@@ -22,7 +22,7 @@ struct vect{
     }
     return *this;
   }
-  //functions for cartesian vectors
+
   double x() const{
     return theta;
   }
