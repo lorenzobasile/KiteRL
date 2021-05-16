@@ -8,6 +8,7 @@ n_attack=pk.coefficients.shape[0]
 n_bank=pk.bank_angles.shape[0]
 n_beta=pk.n_beta
 
+
 def apply_action(state, action):
     if action==(1,1):
         return state[0],state[1]
@@ -53,14 +54,16 @@ def terminal_step(Q, S_t, A_t, R_t1, eta):
     Q[S_t+A_t]=Q[S_t+A_t]+eta*(R_t1-Q[S_t+A_t])
     return Q
 
-def plot_trajectory(theta, phi, r):
+def plot_trajectory(theta, phi, r, save=None):
     fig=plt.figure()
     ax = fig.add_subplot(111, projection = '3d')
     x=np.multiply(r, np.multiply(np.sin(theta), np.cos(phi)))
     y=np.multiply(r, np.multiply(np.sin(theta), np.sin(phi)))
     z=np.multiply(r, np.cos(theta))
-    line,=ax.plot(x, y, z, 'o', markersize=1)
+    line,=ax.plot(x, y, z, 'o')
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     ax.set_zlabel("z")
+    if save is not None:
+        plt.savefig(save)
     plt.show()

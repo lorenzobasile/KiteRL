@@ -8,7 +8,7 @@ coefficients=np.array([
     [0.2, 0.005],
     [0.35, 0.01],
     [0.45, 0.02],
-    [0.55, 0.65],
+    [0.55, 0.03],
     [0.65, 0.05],
     [0.75, 0.07],
     [0.82, 0.09],
@@ -35,6 +35,9 @@ class kite(Structure):
     _fields_ = [
         ('position', vect),
         ('velocity', vect),
+        ('C_l', c_double),
+        ('C_d', c_double),
+        ('psi', c_double)
     ]
     def __init__(self, initial_pos, initial_vel):
         self.position=initial_pos
@@ -42,27 +45,25 @@ class kite(Structure):
     def simulate(self, step, wind):
         return libkite.simulation_step(pointer(self), step, wind)
     def evolve_system(self, attack_angle, bank_angle, integration_steps, step, wind):
-        C_l, C_d = coefficients[attack_angle,0], coefficients[attack_angle,1]
-        psi = np.deg2rad(bank_angles[bank_angle])
-        return libkite.simulate(pointer(self), C_l, C_d, psi, integration_steps, step, wind)
+        self.C_l, self.C_d = coefficients[attack_angle,0], coefficients[attack_angle,1]
+        self.psi = np.deg2rad(bank_angles[bank_angle])
+        return libkite.simulate(pointer(self), integration_steps, step, wind)
     def beta(self, wind):
         b=np.digitize(libkite.getbeta(pointer(self), wind), np.linspace(-np.pi/2, np.pi/2, n_beta))
         return 0
-    def reward(self, attack_angle, bank_angle, wind):
-        C_l, C_d = coefficients[attack_angle,0], coefficients[attack_angle,1]
-        psi = np.deg2rad(bank_angles[bank_angle])
-        return libkite.getreward(pointer(self), wind, C_l, C_d, psi)
+    def reward(self, wind):
+        return libkite.getreward(pointer(self), wind)
 
 
 def setup_lib(lib_path):
     lib = cdll.LoadLibrary(lib_path)
     lib.simulation_step.argtypes = [POINTER(kite), c_double, vect]
-    lib.simulation_step.restype = c_bool
-    lib.simulate.argtypes =[POINTER(kite), c_double, c_double, c_double, c_int, c_double, vect]
-    lib.simulate.restype=c_bool
+    lib.simulation_step.restype = c_int
+    lib.simulate.argtypes =[POINTER(kite), c_int, c_double, vect]
+    lib.simulate.restype=c_int
     lib.getbeta.argtypes = [POINTER(kite), vect]
     lib.getbeta.restype=c_double
-    lib.getreward.argtypes = [POINTER(kite), vect, c_double, c_double, c_double]
+    lib.getreward.argtypes = [POINTER(kite), vect]
     lib.getreward.restype=c_double
     return lib
 

@@ -40,3 +40,6 @@
 
 # pycache
 __pycache__/
+
+# plots
+plots/

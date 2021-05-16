@@ -7,20 +7,21 @@ extern "C" {
   kite init_kite(vect p, vect v){
     return kite{p, v};
   }
-  bool simulation_step(kite* k, const double step, const vect wind){
-    bool continuation=true;
-    continuation=k->update_state(step, wind);
-    return continuation;
+  int simulation_step(kite* k, const double step, const vect wind){
+    auto status=k->update_state(step, wind);
+    return status;
   }
 
-  bool simulate(kite* k, const double C_l, const double C_d, const double psi, const int integration_steps, const double step, const vect wind){
+  int simulate(kite* k, const int integration_steps, const double step, const vect wind){
     bool continuation=true;
+    int status;
     int i=0;
     while(continuation && i<integration_steps) {
-        continuation=k->update_state(step, wind, C_l, C_d, psi);
+        status=k->update_state(step, wind);
+        continuation=(status==0);
         i++;
       }
-    return continuation;
+    return status;
   }
 
   double getbeta(kite* k, const vect wind){
@@ -28,8 +29,8 @@ extern "C" {
   }
 
 
-  double getreward(kite* k, const vect wind, const double C_l, const double C_d, const double psi){
-    return (k->compute_power(wind, C_l, C_d, psi));
+  double getreward(kite* k, const vect wind){
+    return (k->compute_power(wind));
   }
 
 }
