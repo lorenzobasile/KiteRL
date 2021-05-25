@@ -16,23 +16,20 @@ class kite{
   double psi;
 
   kite()=default;
-  kite(vect initial_position, vect initial_velocity): position{initial_position}, velocity{initial_velocity}, C_l{0.2}, C_d{0.05}, psi{0.02} {}
+  kite(vect initial_position, vect initial_velocity): position{initial_position}, velocity{initial_velocity}, C_l{0.2}, C_d{0.05}, psi{-0.05} {}
   ~kite()=default;
 
   int update_state(const double step, const vect& wind){
-    std::pair<bool, vect> f=compute_force(wind);
-    if(!f.first){
+    auto accel=get_accelerations(wind);
+    if(!accel.first){
       std::cout<<"Aborting simulation\n";
       return 2;
     }
-    vect force=f.second;
-    vect t=tension(force);
-    force-=t;
+    auto accelerations=accel.second;
     //std::cout<<"force "<<force.norm()<<std::endl;
-    //std::cout<<"tension "<<t.norm()<<std::endl;
-    velocity.theta+=(force.theta/(m*position.r)*step);
-    velocity.phi+=(force.phi/(m*position.r*sin(position.theta))*step);
-    velocity.r+=(force.r/m*step);
+    velocity.theta+=(accelerations.theta*step);
+    velocity.phi+=(accelerations.phi*step);
+    velocity.r+=(accelerations.r*step);
     if(velocity.r<0) velocity.r=0;
     position.theta+=(velocity.theta*step);
     position.phi+=(velocity.phi*step);
@@ -53,6 +50,19 @@ class kite{
     vect W_e=wind-W_a;
     double beta=atan(W_e.z()/(sqrt(pow(W_e.x(), 2)+pow(W_e.y(), 2))));
     return beta;
+  }
+
+  std::pair<bool, vect> get_accelerations(const vect& wind){
+    std::pair<bool, vect> f=compute_force(wind);
+    if(!f.first){
+      std::cout<<"Aborting simulation\n";
+      return {false, vect{}};
+    }
+    vect force=f.second;
+    vect t=tension(force);
+    std::cout<<"tension "<<t.norm()<<std::endl;
+    force-=t;
+    return {true, vect{force.theta/(m*position.r), force.phi/(m*position.r*sin(position.theta)), force.r/m}};
   }
 
   std::pair<bool, vect> compute_force(const vect& wind) const{

@@ -28,6 +28,10 @@ extern "C" {
     return k->getbeta(wind);
   }
 
+  vect getaccelerations(kite* k, const vect wind){
+    return k->get_accelerations(wind).second;
+  }
+
 
   double getreward(kite* k, const vect wind){
     return (k->compute_power(wind));

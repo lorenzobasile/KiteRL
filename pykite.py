@@ -51,8 +51,14 @@ class kite(Structure):
     def beta(self, wind):
         b=np.digitize(libkite.getbeta(pointer(self), wind), np.linspace(-np.pi/2, np.pi/2, n_beta))
         return 0
-    def reward(self, wind):
-        return libkite.getreward(pointer(self), wind)
+    def accelerations(self, wind):
+        a=libkite.getaccelerations(pointer(self), wind)
+        return a.theta, a.phi, a.r
+    def reward(self, wind, learning_step):
+        return libkite.getreward(pointer(self), wind)*learning_step
+    def wind_gradient(self, value):
+        height=self.position.r*np.cos(self.position.theta)
+        return vect(value*height,0,0)
 
 
 def setup_lib(lib_path):
@@ -63,6 +69,8 @@ def setup_lib(lib_path):
     lib.simulate.restype=c_int
     lib.getbeta.argtypes = [POINTER(kite), vect]
     lib.getbeta.restype=c_double
+    lib.getaccelerations.argtypes = [POINTER(kite), vect]
+    lib.getaccelerations.restype=vect
     lib.getreward.argtypes = [POINTER(kite), vect]
     lib.getreward.restype=c_double
     return lib

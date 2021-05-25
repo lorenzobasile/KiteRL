@@ -12,7 +12,7 @@ max_power=8000
 eta0=0.1
 gamma=1
 eps0=0.01
-episode_duration=300
+episode_duration=180
 learning_step=0.2
 horizon=int(episode_duration/learning_step)
 integration_step=0.001
@@ -23,7 +23,7 @@ Q*=(max_power*2)
 
 durations=[]
 rewards=[]
-episodes=300
+episodes=1000
 t=0
 theta0=[]
 phi0=[]
@@ -56,7 +56,7 @@ for j in range(episodes):
             Q=terminal_step(Q, S_t, A_t, R_t1, eta)
             break
         S_t1 = (new_attack_angle, new_bank_angle, k.beta(wind))
-        R_t1 = k.reward(wind)
+        R_t1 = k.reward(wind, learning_step)
         cumulative_reward+=R_t1
         A_t1=eps_greedy_policy(Q, S_t1, eps)
         if i==int(horizon)-1:
@@ -68,6 +68,7 @@ for j in range(episodes):
             Q=step(Q, S_t, A_t, R_t1, S_t1, A_t1, eta, gamma)
         S_t=S_t1
         A_t=A_t1
+print(np.max(Q[3,6,0]))
 
 try:
     os.mkdir(path)
