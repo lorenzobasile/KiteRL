@@ -9,6 +9,8 @@
 class kite{
   vect position;
   vect velocity;
+  double init_wind;
+  vect wind;
 
   public:
   double C_l;
@@ -16,13 +18,12 @@ class kite{
   double psi;
 
   kite()=default;
-  kite(vect initial_position, vect initial_velocity): position{initial_position}, velocity{initial_velocity}, C_l{0.2}, C_d{0.05}, psi{-0.05} {}
+  kite(vect initial_position, vect initial_velocity, double initial_wind): position{initial_position}, velocity{initial_velocity}, init_wind{initial_wind}, wind{initial_wind,0,0}, C_l{0.2}, C_d{0.05}, psi{-0.05} {}
   ~kite()=default;
 
-  int update_state(const double step, const vect& wind){
-    auto accel=get_accelerations(wind);
+  int update_state(const double step){
+    auto accel=get_accelerations();
     if(!accel.first){
-      std::cout<<"Aborting simulation\n";
       return 2;
     }
     auto accelerations=accel.second;
@@ -35,16 +36,22 @@ class kite{
     position.phi+=(velocity.phi*step);
     position.r+=(velocity.r*step);
     if(position.theta>=pi/2) return 1;
+    update_wind();
     return 0;
   }
+    
+  void update_wind(){
+    double z= position.r*cos(position.theta);
+    wind={init_wind+slope*(z-43),0,0};
+  }
 
-  double compute_power(const vect& wind){
-    vect f=compute_force(wind).second;
+  double compute_power(){
+    vect f=compute_force().second;
     vect t=tension(f);
     return velocity.r*t.r;
   }
 
-  double getbeta(const vect& wind){
+  double getbeta(){
     vect W_a{velocity.theta*position.r, velocity.phi*position.r*sin(position.theta), velocity.r};
     W_a=W_a.tocartesian(position);
     vect W_e=wind-W_a;
@@ -52,20 +59,20 @@ class kite{
     return beta;
   }
 
-  std::pair<bool, vect> get_accelerations(const vect& wind){
-    std::pair<bool, vect> f=compute_force(wind);
+  std::pair<bool, vect> get_accelerations(){
+    std::pair<bool, vect> f=compute_force();
     if(!f.first){
-      std::cout<<"Aborting simulation\n";
+      //std::cout<<"Aborting simulation\n";
       return {false, vect{}};
     }
     vect force=f.second;
     vect t=tension(force);
-    std::cout<<"tension "<<t.norm()<<std::endl;
+    //std::cout<<"tension "<<t.norm()<<std::endl;
     force-=t;
     return {true, vect{force.theta/(m*position.r), force.phi/(m*position.r*sin(position.theta)), force.r/m}};
   }
 
-  std::pair<bool, vect> compute_force(const vect& wind) const{
+  std::pair<bool, vect> compute_force() const{
     vect f_grav;
     vect f_app;
     std::pair<bool, vect> aer;
@@ -75,7 +82,7 @@ class kite{
     f_app.theta=m*(pow(velocity.phi, 2)*position.r*sin(position.theta)*cos(position.theta)-2*velocity.r*velocity.theta);
     f_app.phi=m*(-2*velocity.r*velocity.phi*sin(position.theta)-2*velocity.phi*velocity.theta*position.r*cos(position.theta));
     f_app.r=m*(position.r*pow(velocity.theta, 2)+position.r*pow(velocity.phi, 2)*pow(sin(position.theta), 2));
-    aer=aerodynamic_force(wind);
+    aer=aerodynamic_force();
     if(aer.first) return std::pair<bool, vect> (true, f_grav+f_app+aer.second);
     else return std::pair<bool, vect> (false, vect{});
   }
@@ -91,11 +98,11 @@ class kite{
         return vect{0,0,num/denom};
     }
 
-  std::pair<bool, vect> aerodynamic_force(const vect& wind_vect) const{
+  std::pair<bool, vect> aerodynamic_force() const{
     vect W_l{
-      wind_vect.x()*cos(position.theta)*cos(position.phi)+wind_vect.y()*cos(position.theta)*sin(position.phi)-wind_vect.z()*sin(position.theta),
-      -wind_vect.x()*sin(position.phi)+wind_vect.y()*cos(position.phi),
-      wind_vect.x()*sin(position.theta)*cos(position.phi)+wind_vect.y()*sin(position.theta)*sin(position.phi)+wind_vect.z()*cos(position.theta)
+      wind.x()*cos(position.theta)*cos(position.phi)+wind.y()*cos(position.theta)*sin(position.phi)-wind.z()*sin(position.theta),
+      -wind.x()*sin(position.phi)+wind.y()*cos(position.phi),
+      wind.x()*sin(position.theta)*cos(position.phi)+wind.y()*sin(position.theta)*sin(position.phi)+wind.z()*cos(position.theta)
     };
     vect W_a{velocity.theta*position.r, velocity.phi*position.r*sin(position.theta), velocity.r};
     //std::cout<<"kite"<<W_a.norm()<<std::endl;
@@ -121,12 +128,12 @@ class kite{
     return std::pair<bool, vect> (true, drag+lift);
   }
 
-  void simulate(const double step, const int duration, const vect& wind){
+  void simulate(const double step, const int duration){
     int i=0;
     bool continuation=true;
     while(continuation && i<duration){
       if(i%1==0)std::cout<<"Position at step "<<i<<": "<<position<<std::endl;
-      continuation=(update_state(step, wind)==0);
+      continuation=(update_state(step)==0);
       i++;
     }
   }

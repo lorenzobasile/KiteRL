@@ -1,6 +1,6 @@
 import numpy as np
 import pykite as pk
-from learning_utils import *
+from utils import *
 import matplotlib.pyplot as plt
 import os
 
@@ -32,9 +32,9 @@ for j in range(episodes):
     cumulative_reward=0
     initial_position=pk.vect(np.pi/6, 0, 50)
     initial_velocity=pk.vect(0, 0, 0)
-    wind=pk.vect(10,0,0)
-    k=pk.kite(initial_position, initial_velocity)
-    initial_beta=k.beta(wind)
+    start_wind=10
+    k=pk.kite(initial_position, initial_velocity, start_wind)
+    initial_beta=k.beta()
     S_t=(np.random.randint(0,n_attack), np.random.randint(0,n_bank), initial_beta)
     A_t=eps_greedy_policy(Q, S_t, eps0)
     for i in range(horizon):
@@ -46,7 +46,7 @@ for j in range(episodes):
             phi0.append(k.position.phi)
             r0.append(k.position.r)
         new_attack_angle, new_bank_angle=apply_action(S_t, A_t)
-        sim_status=k.evolve_system(new_attack_angle, new_bank_angle, integration_steps_per_learning_step, integration_step, wind)
+        sim_status=k.evolve_system(new_attack_angle, new_bank_angle, integration_steps_per_learning_step, integration_step)
         if not sim_status==0:
             R_t1 = scheduling(-300000, i, horizon/4)
             cumulative_reward+=R_t1
@@ -55,8 +55,8 @@ for j in range(episodes):
             durations.append(i)
             Q=terminal_step(Q, S_t, A_t, R_t1, eta)
             break
-        S_t1 = (new_attack_angle, new_bank_angle, k.beta(wind))
-        R_t1 = k.reward(wind, learning_step)
+        S_t1 = (new_attack_angle, new_bank_angle, k.beta())
+        R_t1 = k.reward(learning_step)
         cumulative_reward+=R_t1
         A_t1=eps_greedy_policy(Q, S_t1, eps)
         if i==int(horizon)-1:
