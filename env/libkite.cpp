@@ -1,15 +1,20 @@
 #include "kite.hpp"
 
 extern "C" {
-  vect init_vect(double theta, double phi, double r){
-    return vect{theta, phi, r};
-  }
-  kite init_kite(vect p, vect v, double w){
-    return kite{p, v, w};
-  }
+
   int simulation_step(kite* k, const double step){
     auto status=k->update_state(step);
     return status;
+  }
+  void init_lin_wind(kite* k, double vel_ground, double ang_coef){
+    Wind3d_lin* wind = new Wind3d_lin{vel_ground, ang_coef};
+    wind->init(k->position.r*sin(k->position.theta)*cos(k->position.phi), k->position.r*sin(k->position.theta)*sin(k->position.phi), k->position.r*cos(k->position.theta));
+    k->wind=wind;
+  }
+  void init_turboframe_wind(kite* k){
+    Wind3d_turboframe* wind = new Wind3d_turboframe;
+    wind->init(k->position.r*sin(k->position.theta)*cos(k->position.phi), k->position.r*sin(k->position.theta)*sin(k->position.phi), k->position.r*cos(k->position.theta));
+    k->wind=wind;
   }
 
   int simulate(kite* k, const int integration_steps, const double step){
@@ -29,7 +34,9 @@ extern "C" {
   }
 
   vect getaccelerations(kite* k){
-    return k->get_accelerations().second;
+    auto pippo= k->get_accelerations().second;
+    std::cout<<pippo<<std::endl;
+    return pippo;
   }
 
 

@@ -43,3 +43,7 @@ __pycache__/
 
 # plots
 plots/
+
+trash/
+
+flow/

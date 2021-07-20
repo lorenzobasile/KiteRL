@@ -1,6 +1,6 @@
 SRC = main.cpp
 CXX = g++
-CXXFLAGS = -O3 -std=c++14 -Ienv
+CXXFLAGS = -O3 -std=c++14 -Ienv utils.cpp
 LIBFLAGS = --target=x86_64-apple-darwin -Wno-return-type-c-linkage -shared -fpic -o
 EXE = $(SRC:.cpp=.x)
 
@@ -30,6 +30,6 @@ clean:
 
 .PHONY: clean
 
-main.x: kite.hpp constants.hpp vect.hpp
+main.x: kite.hpp constants.hpp vect.hpp utils.cpp wind.hpp
 
-libkite.so: kite.hpp constants.hpp vect.hpp
+libkite.so: kite.hpp constants.hpp vect.hpp utils.cpp wind.hpp

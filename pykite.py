@@ -20,6 +20,22 @@ coefficients=np.array([
 ])
 bank_angles=np.array([-3, -2, -1, 0, 1, 2, 3])
 n_beta=1
+'''
+class Wind3d(Structure):
+    _fields_ = [
+        ('m_vel', POINTER(c_double)),
+    ]
+    def __init__(self):
+        pass
+
+class Wind3d_lin(Wind3d):
+    _fields_ = [
+        ('vel_ground', c_double),
+        ('ang_coef', c_double)
+    ]
+    def _init_(self):
+        pass
+'''
 class vect(Structure):
     _fields_ = [
         ('theta', c_double),
@@ -35,18 +51,22 @@ class kite(Structure):
     _fields_ = [
         ('position', vect),
         ('velocity', vect),
-        ('init_wind', c_double),
-        ('wind', vect),
+        ('wind', c_void_p),
         ('C_l', c_double),
         ('C_d', c_double),
         ('psi', c_double)
     ]
-    def __init__(self, initial_pos, initial_vel, initial_w):
+    def __init__(self, initial_pos, initial_vel):
         self.position=initial_pos
         self.velocity=initial_vel
-        self.init_wind=initial_w
-        self.wind=vect(initial_w, 0, 0)
-    def simulate(self, step, wind):
+        self.C_l=0.35
+        self.C_d=0.01
+        self.psi=0
+        libkite.init_turboframe_wind(pointer(self))
+        #libkite.init_lin_wind(pointer(self), 8, 0.125)
+    def __str__(self):
+        return "Position: "+str(self.position.theta)+","+str(self.position.phi)+","+str(self.position.r)+", Velocity"+ str(self.velocity.theta)+","+str(self.velocity.phi)+","+str(self.velocity.r)
+    def simulate(self, step):
         return libkite.simulation_step(pointer(self), step)
     def evolve_system(self, attack_angle, bank_angle, integration_steps, step):
         self.C_l, self.C_d = coefficients[attack_angle,0], coefficients[attack_angle,1]
@@ -54,7 +74,7 @@ class kite(Structure):
         return libkite.simulate(pointer(self), integration_steps, step)
     def beta(self):
         b=np.digitize(libkite.getbeta(pointer(self)), np.linspace(-np.pi/2, np.pi/2, n_beta))
-        return b
+        return 0
     def accelerations(self):
         a=libkite.getaccelerations(pointer(self))
         return a.theta, a.phi, a.r
@@ -71,6 +91,7 @@ def setup_lib(lib_path):
     lib.simulation_step.restype = c_int
     lib.simulate.argtypes =[POINTER(kite), c_int, c_double]
     lib.simulate.restype=c_int
+    lib.init_lin_wind.argtypes=[POINTER(kite), c_double, c_double]
     lib.getbeta.argtypes = [POINTER(kite)]
     lib.getbeta.restype=c_double
     lib.getaccelerations.argtypes = [POINTER(kite)]

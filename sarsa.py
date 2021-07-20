@@ -32,8 +32,7 @@ for j in range(episodes):
     cumulative_reward=0
     initial_position=pk.vect(np.pi/6, 0, 50)
     initial_velocity=pk.vect(0, 0, 0)
-    start_wind=10
-    k=pk.kite(initial_position, initial_velocity, start_wind)
+    k=pk.kite(initial_position, initial_velocity)
     initial_beta=k.beta()
     S_t=(np.random.randint(0,n_attack), np.random.randint(0,n_bank), initial_beta)
     A_t=eps_greedy_policy(Q, S_t, eps0)
