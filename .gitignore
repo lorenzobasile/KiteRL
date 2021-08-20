@@ -47,3 +47,5 @@ plots/
 trash/
 
 flow/
+
+run.sh.*

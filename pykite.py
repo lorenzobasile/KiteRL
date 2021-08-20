@@ -62,7 +62,11 @@ class kite(Structure):
         self.C_l=0.35
         self.C_d=0.01
         self.psi=0
-        libkite.init_turboframe_wind(pointer(self))
+        libkite.init_turbo_wind(pointer(self))
+    def reset(self, initial_pos, initial_vel):
+        self.position=initial_pos
+        self.velocity=initial_vel
+        libkite.reset_turbo_wind(pointer(self))
         #libkite.init_lin_wind(pointer(self), 8, 0.125)
     def __str__(self):
         return "Position: "+str(self.position.theta)+","+str(self.position.phi)+","+str(self.position.r)+", Velocity"+ str(self.velocity.theta)+","+str(self.velocity.phi)+","+str(self.velocity.r)
@@ -100,4 +104,4 @@ def setup_lib(lib_path):
     lib.getreward.restype=c_double
     return lib
 
-libkite=setup_lib("libkite.so")
+libkite=setup_lib("./libkite.so")

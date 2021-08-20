@@ -53,6 +53,12 @@ def scheduling(value, t, T, exp=0.6):
     else:
         return value
 
+def scheduling_c(value, t, T, exp=0.6, ac=1):
+    if t>T:
+        return value*ac/(ac-(t-T)**exp)
+    else:
+        return value
+
 def terminal_step(Q, S_t, A_t, R_t1, eta):
     Q[S_t+A_t]=Q[S_t+A_t]+eta*(R_t1-Q[S_t+A_t])
     return Q
@@ -71,7 +77,7 @@ def plot_trajectory(theta, phi, r, save=None, marker='-'):
         plt.savefig(save)
     plt.show()
 
-def dql(net, opt, episodes, horizon, learning_step, integration_step, integration_steps_per_learning_step, initial_pos, initial_vel, wind, lr=0.1, lr_decay_exp=0.6, lr_decay_start=200000, eps=0.01, eps_decay_exp=1.2, eps_decay_start=400000, gamma=1, plot=False):
+def dql(net, opt, episodes, horizon, learning_step, integration_step, integration_steps_per_learning_step, initial_pos, initial_vel, wind, lr=0.1, lr_decay_exp=0.6, lr_decay_start=200000, eps=0.01, eps_decay_exp=0.6, eps_decay_start=400000, gamma=1, plot=False):
     durations=[]
     rewards=[]
     losses=[]
@@ -81,12 +87,14 @@ def dql(net, opt, episodes, horizon, learning_step, integration_step, integratio
         optimizer=torch.optim.SGD(net.parameters(), lr=lr, weight_decay=0.000)
     loss=torch.nn.SmoothL1Loss()
     t=0
+    k=pk.kite(initial_pos, initial_vel)
     for episode in range(episodes):
         print(episode)
-        t,theta,phi,r=dql_episode(net, optimizer, loss, initial_pos, initial_vel, wind, horizon, learning_step, integration_step, integration_steps_per_learning_step, lr, lr_decay_exp, lr_decay_start, eps, eps_decay_exp, eps_decay_start, durations, rewards, gamma, t, plot)
+        k.reset(initial_pos, initial_vel)
+        t,theta,phi,r=dql_episode(k, net, optimizer, loss, initial_pos, initial_vel, wind, horizon, learning_step, integration_step, integration_steps_per_learning_step, lr, lr_decay_exp, lr_decay_start, eps, eps_decay_exp, eps_decay_start, durations, rewards, gamma, t, plot)
     return durations, rewards,theta,phi,r
 
-def dql_episode(net, optimizer, loss, initial_position, initial_velocity, wind, horizon, learning_step, integration_step, integration_steps_per_learning_step, eta0, eta_decay, eta_decay_start, eps0, eps_decay, eps_decay_start, durations, rewards, gamma, t, plot):
+def dql_episode(k, net, optimizer, loss, initial_position, initial_velocity, wind, horizon, learning_step, integration_step, integration_steps_per_learning_step, eta0, eta_decay, eta_decay_start, eps0, eps_decay, eps_decay_start, durations, rewards, gamma, t, plot):
     if plot:
         theta=[]
         phi=[]
@@ -97,7 +105,6 @@ def dql_episode(net, optimizer, loss, initial_position, initial_velocity, wind, 
         r=None
     factor=1e5
     cumulative_reward=0
-    k=pk.kite(initial_position, initial_velocity)
     initial_beta=k.beta()
     S_t=(np.random.randint(0,n_attack), np.random.randint(0,n_bank),initial_beta)
     k.C_l, k.C_d = pk.coefficients[S_t[0],0], pk.coefficients[S_t[0],1]
@@ -110,6 +117,10 @@ def dql_episode(net, optimizer, loss, initial_position, initial_velocity, wind, 
     tensor_state[2]/=n_beta
     #print(net(tensor_state).reshape(3,3))
     for i in range(horizon):
+        if k.position.r*np.cos(k.position.theta)>100:
+            print(k.position.r*np.cos(k.position.theta))
+            print(k.position.r)
+            break
         if plot:
             theta.append(k.position.theta)
             phi.append(k.position.phi)

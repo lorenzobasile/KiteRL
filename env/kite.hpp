@@ -94,8 +94,8 @@ public:
     return vect{0,0, forces.r/k+at*velocity.r/a};
   }*/
     vect tension(const vect& forces) const{
-        auto num=M*a*forces.r+2*m*10*velocity.r/a;
-        auto denom=2*m+M*a;
+        auto num=M*er*forces.r+2*m*10*velocity.r/er;
+        auto denom=2*m*er+M*er;
         return vect{0,0,num/denom};
     }
 

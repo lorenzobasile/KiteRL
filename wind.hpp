@@ -62,11 +62,11 @@ protected:
         //const static int n_x_axis_points = 71;
         //const static int n_y_axis_points = 71;
         //const static int n_z_axis_points = 99;
-        constexpr static double x_size = 100.531;
-        constexpr static double y_size = 100.531;
-        constexpr static double z_half_size = 50;
+        constexpr static double x_size = 100.531*1;
+        constexpr static double y_size = 100.531*1;
+        constexpr static double z_half_size = 50*1;
 
-        const static int n_frames = 100;
+        const static int n_frames = 3000;
         const double delta_time = 0.2;
 
         double** q_grid;
@@ -80,15 +80,17 @@ protected:
         void read_grid_file(std::string path, double** grid_data){
             std::ifstream file;
             file.open(path);
+            int factor=1;
+            if(path=="q.txt") factor=1;
 
             std::string line;
             vecd l = vecd(3);
             int count = 0;
             while ( getline (file, line) ){
                 l = str2vecd(line, " ", false);
-                grid_data[count][0] = l[0];
-                grid_data[count][1] = l[2];
-                grid_data[count][2] = l[1];
+                grid_data[count][0] = l[0]*factor;
+                grid_data[count][1] = l[2]*factor;
+                grid_data[count][2] = l[1]*factor;
                 count++;
             }
             file.close();
@@ -306,7 +308,7 @@ class Wind3d_turbo : public Wind3d_turboframe {
             std::string v_dir, v_name, q_path;
             int start_frame;
             try {
-                v_dir = "./flow/";
+                v_dir = "./v1/";
                 v_name = "velocities";
                 start_frame = 1000;
                 q_path = "q.txt";

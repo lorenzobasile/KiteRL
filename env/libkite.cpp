@@ -17,6 +17,15 @@ extern "C" {
     k->wind=wind;
   }
 
+  void init_turbo_wind(kite* k){
+      Wind3d_turbo* wind = new Wind3d_turbo;
+      wind->init(k->position.r*sin(k->position.theta)*cos(k->position.phi), k->position.r*sin(k->position.theta)*sin(k->position.phi), k->position.r*cos(k->position.theta));
+      k->wind=wind;
+    }
+   void reset_turbo_wind(kite* k){
+   	k->wind->init(k->position.r*sin(k->position.theta)*cos(k->position.phi), k->position.r*sin(k->position.theta)*sin(k->position.phi), k->position.r*cos(k->position.theta));
+   }
+
   int simulate(kite* k, const int integration_steps, const double step){
     bool continuation=true;
     int status;
@@ -35,7 +44,6 @@ extern "C" {
 
   vect getaccelerations(kite* k){
     auto pippo= k->get_accelerations().second;
-    std::cout<<pippo<<std::endl;
     return pippo;
   }
 

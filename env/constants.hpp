@@ -14,7 +14,7 @@
 
 
 #define M 10.0 //engine mass
-#define a 0.2 //engine radius
+#define er 0.2 //engine radius
 
 
 #endif
