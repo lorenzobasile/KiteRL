@@ -3,6 +3,7 @@ import pykite as pk
 from utils import *
 import matplotlib.pyplot as plt
 import os
+np.random.seed(0)
 
 path="./plots/test/"
 n_attack=pk.coefficients.shape[0]
@@ -12,7 +13,7 @@ max_power=8000
 eta0=0.1
 gamma=1
 eps0=0.01
-episode_duration=180
+episode_duration=300
 learning_step=0.2
 horizon=int(episode_duration/learning_step)
 integration_step=0.001
@@ -35,11 +36,13 @@ for j in range(episodes):
     k=pk.kite(initial_position, initial_velocity)
     initial_beta=k.beta()
     S_t=(np.random.randint(0,n_attack), np.random.randint(0,n_bank), initial_beta)
+    k.C_l, k.C_d = pk.coefficients[S_t[0],0], pk.coefficients[S_t[0],1]
+    k.psi = np.deg2rad(pk.bank_angles[S_t[1]])
     A_t=eps_greedy_policy(Q, S_t, eps0)
     for i in range(horizon):
         t+=1
-        eps=scheduling(eps0, t, 100000*2)
-        eta=scheduling(eta0, t, 500000*2)
+        eps=scheduling(eps0, t, 300000, exp=1.3)
+        eta=scheduling(eta0, t, 500000, exp=0.9)
         if j==episodes-1:
             theta0.append(k.position.theta)
             phi0.append(k.position.phi)
@@ -47,7 +50,7 @@ for j in range(episodes):
         new_attack_angle, new_bank_angle=apply_action(S_t, A_t)
         sim_status=k.evolve_system(new_attack_angle, new_bank_angle, integration_steps_per_learning_step, integration_step)
         if not sim_status==0:
-            R_t1 = scheduling(-300000, i, horizon/4)
+            R_t1 = scheduling(-3000000, i, horizon/4)
             cumulative_reward+=R_t1
             print(j, "Simulation failed at learning step: ", i, " reward ", cumulative_reward)
             rewards.append(cumulative_reward)
@@ -80,7 +83,7 @@ r0=np.array(r0)
 x=np.multiply(r0, np.multiply(np.sin(theta0), np.cos(phi0)))
 y=np.multiply(r0, np.multiply(np.sin(theta0), np.sin(phi0)))
 z=np.multiply(r0, np.cos(theta0))
-'''
+
 plt.figure()
 plt.plot(x)
 plt.show()
@@ -90,8 +93,8 @@ plt.show()
 plt.figure()
 plt.plot(z)
 plt.show()
-'''
-plot_trajectory(theta0, phi0, r0, save=path+"traj.png")
+
+plot_trajectory(theta0[::10], phi0[::10], r0[::10], save=path+"traj.png")
 
 plt.figure()
 plt.plot(durations, 'o')

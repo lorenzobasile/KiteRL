@@ -62,12 +62,13 @@ class kite(Structure):
         self.C_l=0.35
         self.C_d=0.01
         self.psi=0
-        libkite.init_turbo_wind(pointer(self))
+        libkite.init_lin_wind(pointer(self), 4.625, 0.125)
+        #libkite.init_const_wind(pointer(self), 10)
     def reset(self, initial_pos, initial_vel):
         self.position=initial_pos
         self.velocity=initial_vel
-        libkite.reset_turbo_wind(pointer(self))
-        #libkite.init_lin_wind(pointer(self), 8, 0.125)
+        #libkite.reset_turbo_wind(pointer(self))
+        libkite.init_lin_wind(pointer(self), 8, 0.125)
     def __str__(self):
         return "Position: "+str(self.position.theta)+","+str(self.position.phi)+","+str(self.position.r)+", Velocity"+ str(self.velocity.theta)+","+str(self.velocity.phi)+","+str(self.velocity.r)
     def simulate(self, step):
@@ -77,7 +78,8 @@ class kite(Structure):
         self.psi = np.deg2rad(bank_angles[bank_angle])
         return libkite.simulate(pointer(self), integration_steps, step)
     def beta(self):
-        b=np.digitize(libkite.getbeta(pointer(self)), np.linspace(-np.pi/2, np.pi/2, n_beta))
+        #b=np.digitize(libkite.getbeta(pointer(self)), np.linspace(-np.pi/2, np.pi/2, n_beta))
+        b=libkite.getbeta(pointer(self))
         return 0
     def accelerations(self):
         a=libkite.getaccelerations(pointer(self))
@@ -95,6 +97,7 @@ def setup_lib(lib_path):
     lib.simulation_step.restype = c_int
     lib.simulate.argtypes =[POINTER(kite), c_int, c_double]
     lib.simulate.restype=c_int
+    lib.init_const_wind.argtypes=[POINTER(kite), c_double]
     lib.init_lin_wind.argtypes=[POINTER(kite), c_double, c_double]
     lib.getbeta.argtypes = [POINTER(kite)]
     lib.getbeta.restype=c_double

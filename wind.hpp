@@ -20,14 +20,14 @@ class Wind3d {
         virtual ~Wind3d()=default;
 };
 
-/* Constant wind
+// Constant wind
 class Wind3d_const : public Wind3d {
     public:
-        Wind3d_const(double vel[3]) { m_vel[0] = vel[0]; m_vel[1] = vel[1]; m_vel[2] = vel[2];  };
-        virtual double* velocity(double x, double y, double z, double t) { return m_vel; }
+        Wind3d_const(double vel) { m_vel[0] = vel; m_vel[1] = 0; m_vel[2] = 0;  };
+        virtual double* velocity(double x, double y, double z, double t) {return m_vel; }
         const std::string descr() const { return "3d constant wind."; }
 };
-*/
+
 /* Linear wind */
 class Wind3d_lin : public Wind3d {
 

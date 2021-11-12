@@ -6,6 +6,11 @@ extern "C" {
     auto status=k->update_state(step);
     return status;
   }
+  void init_const_wind(kite* k, double vel){
+    Wind3d_const* wind = new Wind3d_const{vel};
+    wind->init(k->position.r*sin(k->position.theta)*cos(k->position.phi), k->position.r*sin(k->position.theta)*sin(k->position.phi), k->position.r*cos(k->position.theta));
+    k->wind=wind;
+  }
   void init_lin_wind(kite* k, double vel_ground, double ang_coef){
     Wind3d_lin* wind = new Wind3d_lin{vel_ground, ang_coef};
     wind->init(k->position.r*sin(k->position.theta)*cos(k->position.phi), k->position.r*sin(k->position.theta)*sin(k->position.phi), k->position.r*cos(k->position.theta));
