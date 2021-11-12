@@ -3,28 +3,45 @@ import pykite as pk
 from utils import *
 import matplotlib.pyplot as plt
 import os
+import sys
+
+filename=sys.argv[1]
+
+with open(filename) as file:
+    params={}
+    lines=file.readlines()
+    for line in lines:
+        line=line.split()
+        print(line)
+        try:
+            params[line[0]]=float(line[1])
+        except ValueError:
+            params[line[0]]=line[1]
+
+
 np.random.seed(0)
 
 path="./plots/test/"
 n_attack=pk.coefficients.shape[0]
 n_bank=pk.bank_angles.shape[0]
 n_beta=pk.n_beta
-max_power=8000
-eta0=0.1
-gamma=1
-eps0=0.01
-episode_duration=300
-learning_step=0.2
+max_power=params['max_power']
+eta0=params['eta0']
+gamma=params['gamma']
+eps0=params['eps0']
+episode_duration=params['episode_duration']
+learning_step=params['learning_step']
 horizon=int(episode_duration/learning_step)
-integration_step=0.001
+integration_step=params['integration_step']
 integration_steps_per_learning_step=int(learning_step/integration_step)
+wind_type=params['wind_type']
 window_size=30
 Q=np.ones((n_attack, n_bank, n_beta, 3, 3))
 Q*=(max_power*2)
 
 durations=[]
 rewards=[]
-episodes=1000
+episodes=int(params['episodes'])
 t=0
 theta0=[]
 phi0=[]
@@ -33,7 +50,7 @@ for j in range(episodes):
     cumulative_reward=0
     initial_position=pk.vect(np.pi/6, 0, 50)
     initial_velocity=pk.vect(0, 0, 0)
-    k=pk.kite(initial_position, initial_velocity)
+    k=pk.kite(initial_position, initial_velocity, wind_type)
     initial_beta=k.beta()
     S_t=(np.random.randint(0,n_attack), np.random.randint(0,n_bank), initial_beta)
     k.C_l, k.C_d = pk.coefficients[S_t[0],0], pk.coefficients[S_t[0],1]
@@ -41,8 +58,8 @@ for j in range(episodes):
     A_t=eps_greedy_policy(Q, S_t, eps0)
     for i in range(horizon):
         t+=1
-        eps=scheduling(eps0, t, 300000, exp=1.3)
-        eta=scheduling(eta0, t, 500000, exp=0.9)
+        eps=scheduling(eps0, t, params['eps_decay_start'], exp=params['eps_decay_rate'])
+        eta=scheduling(eta0, t, params['eta_decay_start'], exp=params['eta_decay_rate'])
         if j==episodes-1:
             theta0.append(k.position.theta)
             phi0.append(k.position.phi)
