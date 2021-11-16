@@ -3,12 +3,31 @@ import numpy as np
 from matplotlib import pyplot as plt
 import matplotlib.animation as animation
 import torch
+import os
 from mpl_toolkits.mplot3d import Axes3D
 
 n_attack=pk.coefficients.shape[0]
 n_bank=pk.bank_angles.shape[0]
 n_beta=pk.n_beta
 
+
+def write_params(param_dict, dir_path, file_name):
+    """Write a parameter file"""
+    if not os.path.isdir(dir_path):
+        try:
+            os.mkdir(dir_path)
+        except OSError:
+            print ("Creation of the directory failed")
+    f = open(dir_path + file_name, "w")
+    for k,v in param_dict.items():
+        if type(v) is list or type(v) is np.ndarray:
+            f.write(k + "\t")
+            for i in range(len(v)):
+                f.write(str(v[i])+",")
+            f.write("\n")
+        else:
+            f.write(k + "\t" + str(v) + "\n")
+    f.close()
 
 def apply_action(state, action):
     if action==(1,1):
