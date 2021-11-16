@@ -3,7 +3,7 @@ import pykite as pk
 from utils import *
 import matplotlib.pyplot as plt
 import os
-from learning.deep.models import NN, NN5
+from models import NN, NN5
 import sys
 
 filename=sys.argv[1]
