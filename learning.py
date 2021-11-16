@@ -19,10 +19,7 @@ with open(filename) as file:
         except ValueError:
             params[line[0]]=line[1]
 
-
-np.random.seed(0)
-
-path="./plots/test/"
+path = filename[:-14]
 n_attack=pk.coefficients.shape[0]
 n_bank=pk.bank_angles.shape[0]
 n_beta=pk.n_beta
@@ -36,6 +33,12 @@ if params['learning_type']=='sarsa':
     Q=np.ones((n_attack, n_bank, n_beta, 3, 3))
     Q*=(max_power*2)
     Q, durations, rewards=sarsa(k, Q, params, initial_position, initial_velocity)
+    np.save(path+"best_quality", Q)
 else:
     net=NN()
     net, durations, rewards=dql(k, net, params, initial_position, initial_velocity)
+    torch.save(net.state_dict(), path+"best_weights.h5")
+
+with open(path+"return.txt", "w") as file:
+    for i in range(len(durations)):
+        file.write(str(durations[i])+"\t"+str(rewards[i])+"\n")

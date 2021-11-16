@@ -113,8 +113,8 @@ def dql_episode(k, net, optimizer, loss, params, initial_position, initial_veloc
     eps_start=params['eps_decay_start']
     eta_exp=params['eta_decay_rate']
     eta_start=params['eta_decay_start']
+    penalty=params['penalty']
     cumulative_reward=0
-    factor=1e5
     initial_beta=k.beta()
     S_t=(np.random.randint(0,n_attack), np.random.randint(0,n_bank), initial_beta)
     k.C_l, k.C_d = pk.coefficients[S_t[0],0], pk.coefficients[S_t[0],1]
@@ -139,7 +139,7 @@ def dql_episode(k, net, optimizer, loss, params, initial_position, initial_veloc
         new_attack_angle, new_bank_angle=apply_action(S_t, A_t)
         sim_status=k.evolve_system(new_attack_angle, new_bank_angle, integration_steps_per_learning_step, integration_step)
         if not sim_status==0:
-            R_t1 = scheduling(-300000.0/factor, i, horizon/4)
+            R_t1 = scheduling(-penalty, i, horizon/4)
             cumulative_reward+=R_t1
             target=torch.tensor(R_t1)
             l=loss(target, q[A_t])
@@ -155,7 +155,7 @@ def dql_episode(k, net, optimizer, loss, params, initial_position, initial_veloc
         tensor_state[0]/=n_attack
         tensor_state[1]/=n_bank
         tensor_state[2]/=n_beta
-        R_t1 = k.reward(learning_step)/factor
+        R_t1 = k.reward(learning_step)
         cumulative_reward+=R_t1
         if i==int(horizon)-1:
             print("Simulation ended at learning step: ", i, " reward ", cumulative_reward)
@@ -187,6 +187,7 @@ def sarsa(k, Q, params, initial_position, initial_velocity):
     integration_steps_per_learning_step=int(learning_step/integration_step)
     wind_type=params['wind_type']
     episodes=int(params['episodes'])
+    penalty=params['penalty']
     for j in range(episodes):
         cumulative_reward=0
         k.reset(initial_position, initial_velocity, wind_type)
@@ -202,7 +203,7 @@ def sarsa(k, Q, params, initial_position, initial_velocity):
             new_attack_angle, new_bank_angle=apply_action(S_t, A_t)
             sim_status=k.evolve_system(new_attack_angle, new_bank_angle, integration_steps_per_learning_step, integration_step)
             if not sim_status==0:
-                R_t1 = scheduling(-3000000, i, horizon/4)
+                R_t1 = scheduling(-penalty, i, horizon/4)
                 cumulative_reward+=R_t1
                 print(j, "Simulation failed at learning step: ", i, " reward ", cumulative_reward)
                 rewards.append(cumulative_reward)
