@@ -12,5 +12,5 @@ eta_decay_start 500000
 eta_decay_rate 0.9
 wind_type const
 learning_type sarsa
-optimizer sgd
+optimizer adam
 loss huber
