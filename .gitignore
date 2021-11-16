@@ -49,3 +49,9 @@ trash/
 flow/
 
 run.sh.*
+
+data/
+
+videos/
+
+*.pdf
