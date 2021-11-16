@@ -10,4 +10,7 @@ eps_decay_start 300000
 eps_decay_rate 1.3
 eta_decay_start 500000
 eta_decay_rate 0.9
-wind_type lin
+wind_type const
+learning_type dql
+optimizer adam
+loss huber
