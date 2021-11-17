@@ -68,13 +68,13 @@ class kite(Structure):
             libkite.init_lin_wind(pointer(self), params['v_ground'], params['v_ang_coef'])
         if wind_type=='const':
             libkite.init_const_wind(pointer(self), params['v_wind_x'])
-    def reset(self, initial_pos, initial_vel, wind_type):
+    def reset(self, initial_pos, initial_vel, wind_type, params):
         self.position=initial_pos
         self.velocity=initial_vel
         if wind_type=='turbo':
             libkite.reset_turbo_wind(pointer(self))
         if wind_type=='lin':
-            libkite.init_lin_wind(pointer(self), 8, 0.125)
+            libkite.init_lin_wind(pointer(self), params['v_ground'], params['v_ang_coef'])
     def __str__(self):
         return "Position: "+str(self.position.theta)+","+str(self.position.phi)+","+str(self.position.r)+", Velocity"+ str(self.velocity.theta)+","+str(self.velocity.phi)+","+str(self.velocity.r)
     def simulate(self, step):
