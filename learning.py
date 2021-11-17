@@ -28,7 +28,7 @@ window_size=30
 initial_position=pk.vect(np.pi/6, 0, 50)
 initial_velocity=pk.vect(0, 0, 0)
 wind_type=params['wind_type']
-k=pk.kite(initial_position, initial_velocity, wind_type)
+k=pk.kite(initial_position, initial_velocity, wind_type, params)
 if params['learning_type']=='sarsa':
     Q=np.ones((n_attack, n_bank, n_beta, 3, 3))
     Q*=(max_power*2)

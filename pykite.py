@@ -56,7 +56,7 @@ class kite(Structure):
         ('C_d', c_double),
         ('psi', c_double)
     ]
-    def __init__(self, initial_pos, initial_vel, wind_type):
+    def __init__(self, initial_pos, initial_vel, wind_type, params):
         self.position=initial_pos
         self.velocity=initial_vel
         self.C_l=0.35
@@ -65,9 +65,9 @@ class kite(Structure):
         if wind_type=='turbo':
             libkite.init_turbo_wind()
         if wind_type=='lin':
-            libkite.init_lin_wind(pointer(self), 4.625, 0.125)
+            libkite.init_lin_wind(pointer(self), params['v_ground'], params['v_ang_coef'])
         if wind_type=='const':
-            libkite.init_const_wind(pointer(self), 10)
+            libkite.init_const_wind(pointer(self), params['v_wind_x'])
     def reset(self, initial_pos, initial_vel, wind_type):
         self.position=initial_pos
         self.velocity=initial_vel
