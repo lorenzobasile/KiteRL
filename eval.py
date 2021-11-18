@@ -13,7 +13,6 @@ with open(filename) as file:
     lines=file.readlines()
     for line in lines:
         line=line.split()
-        print(line)
         try:
             params[line[0]]=float(line[1])
         except ValueError:
@@ -31,7 +30,7 @@ t=0
 durations=[]
 rewards=[]
 
-eps0=params['eps0']
+eps=params['eps0']
 
 episode_duration=params['episode_duration']
 learning_step=params['learning_step']
@@ -41,6 +40,14 @@ integration_steps_per_learning_step=int(learning_step/integration_step)
 wind_type=params['wind_type']
 penalty=params['penalty']
 episodes=int(params['episodes'])
+
+n_attack=pk.coefficients.shape[0]
+n_bank=pk.bank_angles.shape[0]
+n_beta=pk.n_beta
+
+initial_position=pk.vect(np.pi/6, 0, 50)
+initial_velocity=pk.vect(0, 0, 0)
+k=pk.kite(initial_position, initial_velocity, wind_type, params)
 
 r = []
 theta = []
@@ -59,11 +66,11 @@ while ep<=episodes:
     S_t=(np.random.randint(0,n_attack), np.random.randint(0,n_bank), initial_beta)
     k.C_l, k.C_d = pk.coefficients[S_t[0],0], pk.coefficients[S_t[0],1]
     k.psi = np.deg2rad(pk.bank_angles[S_t[1]])
-    A_t=eps_greedy_policy(Q, S_t, eps0)
+    A_t=eps_greedy_policy(Q, S_t, eps)
 
-    r.append(initial_pos[2])
-    theta.append(initial_pos[0])
-    phi.append(initial_pos[1])
+    r.append(initial_position.r)
+    theta.append(initial_position.theta)
+    phi.append(initial_position.phi)
     alpha.append(S_t[0])
     bank.append(S_t[1])
     beta.append(S_t[2])
@@ -106,9 +113,12 @@ x=np.multiply(r, np.multiply(np.sin(theta), np.cos(phi)))
 y=np.multiply(r, np.multiply(np.sin(theta), np.sin(phi)))
 z=np.multiply(r, np.cos(theta))
 
-coordinates = np.vstack(x,y,z)
-print(coordinates[0])
-np.save(coordinates, "eval_traj")
+coordinates = np.stack([x,y,z],axis=1)
+np.save(path + "eval_traj", coordinates)
 
-controls = np.vstack(alpha,bank,beta)
-np.save(controls, "contr_traj")
+controls = np.stack([alpha,bank,beta],axis=1)
+np.save(path + "contr_traj", controls)
+
+with open(path+"return_eval.txt", "w") as file:
+    for i in range(len(durations)):
+        file.write(str(durations[i])+"\t"+str(rewards[i])+"\n")
