@@ -72,7 +72,7 @@ def scheduling(value, t, T, exp=0.6):
 
 def scheduling_c(value, t, T, exp=0.6, ac=1):
     if t>T:
-        return value*ac/(ac-(t-T)**exp)
+        return value*ac/(ac+(t-T)**exp)
     else:
         return value
 
@@ -112,7 +112,7 @@ def dql(k, net, params, initial_position, initial_velocity):
     episodes=int(params['episodes'])
     for episode in range(episodes):
         print(episode)
-        k.reset(initial_position, initial_velocity, wind_type)
+        k.reset(initial_position, initial_velocity, wind_type, params)
         duration, reward=dql_episode(k, net, optimizer, loss, params, initial_position, initial_velocity, t)
         t+=duration
         durations.append(duration)
@@ -197,19 +197,27 @@ def sarsa(k, Q, params, initial_position, initial_velocity):
     eps0=params['eps0']
     eps_exp=params['eps_decay_rate']
     eps_start=params['eps_decay_start']
+    eps_c=params['eps_c']
     eta_exp=params['eta_decay_rate']
     eta_start=params['eta_decay_start']
+    eta_c=params['eta_c']
     episode_duration=params['episode_duration']
     learning_step=params['learning_step']
     horizon=int(episode_duration/learning_step)
     integration_step=params['integration_step']
     integration_steps_per_learning_step=int(learning_step/integration_step)
     wind_type=params['wind_type']
-    episodes=int(params['episodes'])
     penalty=params['penalty']
-    for j in range(episodes):
+    if 'episodes' in params:
+        episodes=int(params['episodes'])
+    else:
+        max_steps=int(params['max_steps'])
+    ep=0
+    while ep<=episodes if 'episodes' in params else t<max_steps:
+    #for j in range(episodes):
         cumulative_reward=0
-        k.reset(initial_position, initial_velocity, wind_type)
+        ep+=1
+        k.reset(initial_position, initial_velocity, wind_type, params)
         initial_beta=k.beta()
         S_t=(np.random.randint(0,n_attack), np.random.randint(0,n_bank), initial_beta)
         k.C_l, k.C_d = pk.coefficients[S_t[0],0], pk.coefficients[S_t[0],1]
@@ -217,14 +225,14 @@ def sarsa(k, Q, params, initial_position, initial_velocity):
         A_t=eps_greedy_policy(Q, S_t, eps0)
         for i in range(horizon):
             t+=1
-            eps=scheduling(eps0, t, eps_start, exp=eps_exp)
-            eta=scheduling(eta0, t, eta_start, exp=eta_exp)
+            eps=scheduling_c(eps0, t, eps_start, exp=eps_exp, ac=eps_c)
+            eta=scheduling_c(eta0, t, eta_start, exp=eta_exp, ac=eta_c)
             new_attack_angle, new_bank_angle=apply_action(S_t, A_t)
             sim_status=k.evolve_system(new_attack_angle, new_bank_angle, integration_steps_per_learning_step, integration_step)
             if not sim_status==0:
                 R_t1 = scheduling(-penalty, i, horizon/4)
                 cumulative_reward+=R_t1
-                print(j, "Simulation failed at learning step: ", i, " reward ", cumulative_reward)
+                print(ep, "Simulation failed at learning step: ", i, " reward ", cumulative_reward)
                 rewards.append(cumulative_reward)
                 durations.append(i+1)
                 Q=terminal_step(Q, S_t, A_t, R_t1, eta)
@@ -235,7 +243,7 @@ def sarsa(k, Q, params, initial_position, initial_velocity):
             A_t1=eps_greedy_policy(Q, S_t1, eps)
             if i==int(horizon)-1:
                 Q=terminal_step(Q, S_t, A_t, R_t1, eta)
-                print(j, "Simulation ended at learning step: ", i, " reward ", cumulative_reward)
+                print(ep, "Simulation ended at learning step: ", i, " reward ", cumulative_reward)
                 rewards.append(cumulative_reward)
                 durations.append(i+1)
             else:

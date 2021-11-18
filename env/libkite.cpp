@@ -48,13 +48,12 @@ extern "C" {
   }
 
   vect getaccelerations(kite* k){
-    auto pippo= k->get_accelerations().second;
-    return pippo;
+    return k->get_accelerations().second;
   }
 
 
   double getreward(kite* k){
-    return (k->compute_power());
+    return (k->compute_power())/3600000;
   }
 
 }
