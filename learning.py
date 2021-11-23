@@ -31,9 +31,10 @@ wind_type=params['wind_type']
 k=pk.kite(initial_position, initial_velocity, wind_type, params)
 if params['learning_type']=='sarsa':
     Q=np.ones((n_attack, n_bank, n_beta, 3, 3))
-    Q*=(max_power*2)
-    Q, durations, rewards=sarsa(k, Q, params, initial_position, initial_velocity)
+    Q*=(max_power)
+    Q_traj, Q, durations, rewards=sarsa(k, Q, params, initial_position, initial_velocity)
     np.save(path+"best_quality", Q)
+    np.save(path+"quality_traj", Q_traj)
 else:
     net=NN()
     net, durations, rewards=dql(k, net, params, initial_position, initial_velocity)

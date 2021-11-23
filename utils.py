@@ -218,6 +218,7 @@ def dql_episode(k, net, optimizer, loss, params, initial_position, initial_veloc
 
 def sarsa(k, Q, params, initial_position, initial_velocity):
     t=0
+    w=0
     durations=[]
     rewards=[]
     eta0=params['eta0']
@@ -238,8 +239,10 @@ def sarsa(k, Q, params, initial_position, initial_velocity):
     penalty=params['penalty']
     if 'episodes' in params:
         episodes=int(params['episodes'])
+        max_steps=int(params['episodes']*params['episode_duration']/params['learning_step'])
     else:
         max_steps=int(params['max_steps'])
+    Q_traj = np.zeros(((max_steps//1000+1,)+Q.shape))
     ep=0
     while ep<=episodes if 'episodes' in params else t<max_steps:
     #for j in range(episodes):
@@ -278,4 +281,7 @@ def sarsa(k, Q, params, initial_position, initial_velocity):
                 Q=step(Q, S_t, A_t, R_t1, S_t1, A_t1, eta, gamma)
             S_t=S_t1
             A_t=A_t1
-    return Q, durations, rewards
+            if (t-1)%1000 == 0:
+                Q_traj[w] = Q
+                w+=1
+    return Q_traj, Q, durations, rewards
