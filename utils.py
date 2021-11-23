@@ -54,7 +54,7 @@ def read_traj(path):
     for line in f.readlines():
         d_traj.append(line.split()[0])
         r_traj.append(line.split()[1])
-    return np.array(d_traj), np.array(r_traj, dtype="float")
+    return np.array(d_traj, dtype="int"), np.array(r_traj, dtype="float")
 
 
 def apply_action(state, action):
@@ -186,7 +186,7 @@ def dql_episode(k, net, optimizer, loss, params, initial_position, initial_veloc
         new_attack_angle, new_bank_angle=apply_action(S_t, A_t)
         sim_status=k.evolve_system(new_attack_angle, new_bank_angle, integration_steps_per_learning_step, integration_step)
         if not sim_status==0:
-            R_t1 = scheduling(-penalty, i, horizon/4)
+            R_t1 = scheduling(-penalty, i, horizon)
             cumulative_reward+=R_t1
             target=torch.tensor(R_t1)
             l=loss(target, q[A_t])
