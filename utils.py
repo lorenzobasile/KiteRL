@@ -219,6 +219,7 @@ def dql_episode(k, net, optimizer, loss, params, initial_position, initial_veloc
 def sarsa(k, Q, params, initial_position, initial_velocity):
     t=0
     w=0
+    visits=np.zeros_like(Q, dtype='int')
     durations=[]
     rewards=[]
     eta0=params['eta0']
@@ -255,9 +256,10 @@ def sarsa(k, Q, params, initial_position, initial_velocity):
         k.psi = np.deg2rad(pk.bank_angles[S_t[1]])
         A_t=eps_greedy_policy(Q, S_t, eps0)
         for i in range(horizon):
+            visits[S_t+A_t]+=1
             t+=1
             eps=scheduling_c(eps0, t, eps_start, exp=eps_exp, ac=eps_c)
-            eta=scheduling_c(eta0, t, eta_start, exp=eta_exp, ac=eta_c)
+            eta=scheduling_c(eta0, visits[S_t+A_t], eta_start, exp=eta_exp, ac=eta_c)
             new_attack_angle, new_bank_angle=apply_action(S_t, A_t)
             sim_status=k.evolve_system(new_attack_angle, new_bank_angle, integration_steps_per_learning_step, integration_step)
             if not sim_status==0:
