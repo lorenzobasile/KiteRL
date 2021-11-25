@@ -222,7 +222,7 @@ def dql_episode(k, net, optimizer, loss, params, initial_position, initial_veloc
             print("Simulation ended at learning step: ", i, " reward ", cumulative_reward)
             target=torch.tensor(R_t1)
         else:
-            target=R_t1+gamma*torch.max(net(tensor_state))
+            target=R_t1+gamma*torch.max(net(tensor_state)).detach()
         l=loss(target, q[A_t])
         S_t=S_t1
         optimizer.zero_grad()
