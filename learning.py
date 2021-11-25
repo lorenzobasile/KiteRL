@@ -34,11 +34,12 @@ if params['learning_type']=='sarsa':
     Q*=(max_power)
     Q_traj, Q, durations, rewards=sarsa(k, Q, params, initial_position, initial_velocity)
     np.save(path+"best_quality", Q)
-    np.save(path+"quality_traj", Q_traj)
 else:
     net=NN()
-    net, durations, rewards=dql(k, net, params, initial_position, initial_velocity)
+    net, durations, rewards, Q_traj=dql(k, net, params, initial_position, initial_velocity)
     torch.save(net.state_dict(), path+"best_weights.h5")
+np.save(path+"quality_traj", Q_traj)
+
 
 with open(path+"return.txt", "w") as file:
     for i in range(len(durations)):
