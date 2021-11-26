@@ -90,12 +90,12 @@ def apply_action(state, action):
         return min(state[0]+1, n_attack-1), max(state[1]-1, 0)
 
 
-def greedy_action(Q, state):
-    return np.unravel_index(np.argmax(Q[state]), Q[state].shape)
+def greedy_action(Q_values):
+    return np.unravel_index(np.argmax(Q_values), Q_values.shape)
 
-def eps_greedy_policy(Q, state, eps):
+def eps_greedy_policy(Q_values, eps):
     if np.random.rand() < 1-eps:
-        A_t=greedy_action(Q, state)
+        A_t=greedy_action(Q_values)
     else:
         A_t=(np.random.randint(3), np.random.randint(3))
     return A_t
@@ -187,6 +187,8 @@ def dql_episode(k, net, optimizer, loss, params, initial_position, initial_veloc
     acc=k.accelerations()
     S_t+=acc
     tensor_state=torch.tensor(S_t[0:2]).float()
+    tensor_state[0]-=(n_attack/2)
+    tensor_state[1]-=(n_bank/2)
     tensor_state[0]/=n_attack
     tensor_state[1]/=n_bank
     #tensor_state[2]/=n_beta
@@ -194,8 +196,9 @@ def dql_episode(k, net, optimizer, loss, params, initial_position, initial_veloc
         t+=1
         eps=scheduling(eps0, t, eps_start, exp=eps_exp)
         q=net(tensor_state).reshape(3,3)
-        A_t=torch.randint(3,(2,)) if np.random.rand()<eps else (q==torch.max(q)).nonzero().reshape(-1)
-        A_t=A_t[0],A_t[1]
+        A_t=eps_greedy_policy(q.detach().numpy(), eps)
+        #A_t=torch.randint(3,(2,)) if np.random.rand()<eps else (q==torch.max(q)).nonzero().reshape(-1)
+        #A_t=A_t[0],A_t[1]
         optimizer.param_groups[0]['lr']=scheduling(eta0, t, eta_start, exp=eta_exp)
         new_attack_angle, new_bank_angle=apply_action(S_t, A_t)
         sim_status=k.evolve_system(new_attack_angle, new_bank_angle, integration_steps_per_learning_step, integration_step)
@@ -213,6 +216,8 @@ def dql_episode(k, net, optimizer, loss, params, initial_position, initial_veloc
         acc=k.accelerations()
         S_t1+=acc
         tensor_state=torch.tensor(S_t1[0:2]).float()
+        tensor_state[0]-=(n_attack/2)
+        tensor_state[1]-=(n_bank/2)
         tensor_state[0]/=n_attack
         tensor_state[1]/=n_bank
         #tensor_state[2]/=n_beta
@@ -277,7 +282,7 @@ def sarsa(k, Q, params, initial_position, initial_velocity):
         S_t=(np.random.randint(0,n_attack), np.random.randint(0,n_bank), initial_beta)
         k.C_l, k.C_d = pk.coefficients[S_t[0],0], pk.coefficients[S_t[0],1]
         k.psi = np.deg2rad(pk.bank_angles[S_t[1]])
-        A_t=eps_greedy_policy(Q, S_t, eps0)
+        A_t=eps_greedy_policy(Q[S_t], eps0)
         for i in range(horizon):
             visits[S_t+A_t]+=1
             t+=1
@@ -296,7 +301,7 @@ def sarsa(k, Q, params, initial_position, initial_velocity):
             S_t1 = (new_attack_angle, new_bank_angle, k.beta())
             R_t1 = k.reward(learning_step)
             cumulative_reward+=R_t1
-            A_t1=eps_greedy_policy(Q, S_t1, eps)
+            A_t1=eps_greedy_policy(Q[S_t1], S_t1, eps)
             if i==int(horizon)-1:
                 Q=terminal_step(Q, S_t, A_t, R_t1, eta)
                 print(ep, "Simulation ended at learning step: ", i, " reward ", cumulative_reward)
