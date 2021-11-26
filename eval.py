@@ -24,13 +24,11 @@ if params['learning_type']=='sarsa':
     Q=np.load(path + "best_quality.npy")
 else:
     net=NN()
-    net.load_state_dict(path + "best_weights.h5")
-
+    net.load_state_dict(torch.load(path + "best_weights.h5"))
+    net.eval()
 t=0
 durations=[]
 rewards=[]
-
-eps=params['eps0']
 
 episode_duration=params['episode_duration']
 learning_step=params['learning_step']
@@ -58,7 +56,6 @@ beta = []
 
 ep=0
 while ep<=episodes:
-
     cumulative_reward=0
     ep+=1
     k.reset(initial_position, initial_velocity, wind_type, params)
@@ -66,16 +63,23 @@ while ep<=episodes:
     S_t=(np.random.randint(0,n_attack), np.random.randint(0,n_bank), initial_beta)
     k.C_l, k.C_d = pk.coefficients[S_t[0],0], pk.coefficients[S_t[0],1]
     k.psi = np.deg2rad(pk.bank_angles[S_t[1]])
-    A_t=eps_greedy_policy(Q, S_t, eps)
-
     r.append(initial_position.r)
     theta.append(initial_position.theta)
     phi.append(initial_position.phi)
     alpha.append(S_t[0])
     bank.append(S_t[1])
     beta.append(S_t[2])
-
     for i in range(horizon):
+        if params['learning_type']=='dql':
+            tensor_state=torch.tensor(S_t[0:2]).float()
+            tensor_state[0]-=(n_attack/2)
+            tensor_state[1]-=(n_bank/2)
+            tensor_state[0]/=n_attack
+            tensor_state[1]/=n_bank
+            q=net(tensor_state).reshape(3,3)
+            A_t=greedy_action(q.detach().numpy())
+        else:
+            A_t=greedy_action(Q[S_t])
         t+=1
         new_attack_angle, new_bank_angle=apply_action(S_t, A_t)
         sim_status=k.evolve_system(new_attack_angle, new_bank_angle, integration_steps_per_learning_step, integration_step)
@@ -95,13 +99,11 @@ while ep<=episodes:
             break
         R_t1 = k.reward(learning_step)
         cumulative_reward+=R_t1
-        A_t1=eps_greedy_policy(Q, S_t1, eps)
         if i==int(horizon)-1:
             print(ep, "Simulation ended at learning step: ", i, " reward ", cumulative_reward)
             rewards.append(cumulative_reward)
             durations.append(i+1)
         S_t=S_t1
-        A_t=A_t1
 
 r = np.array(r)
 theta = np.array(theta)
