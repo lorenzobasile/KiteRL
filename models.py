@@ -4,15 +4,15 @@ import torch.nn as nn
 class NN(nn.Module):
     def __init__(self, scale=1, init_q=None):
         super().__init__()
-        self.layer1=nn.Linear(2,9*scale)
-        #self.layer2=nn.Linear(8*scale,16)
+        self.layer1=nn.Linear(2,16*scale, bias=False)
+        self.layer2=nn.Linear(16*scale,9, bias=False)
         #self.layer3=nn.Linear(16,9)
         if init_q is not None:
-            nn.init.uniform_(self.layer3.weight, a=0, b=0)
-            nn.init.uniform_(self.layer3.bias, a=init_q, b=init_q)
-        self.activation=nn.LeakyReLU()
+            nn.init.uniform_(self.layer1.weight, a=0, b=0)
+            nn.init.uniform_(self.layer1.bias, a=init_q, b=init_q)
+        self.activation=nn.Tanh()
 
     def forward(self, x):
         #x=self.activation(self.layer1(x))
-        #x=self.activation(self.layer2(x))
-        return self.layer1(x)
+        x=self.activation(self.layer1(x))
+        return self.layer2(x)

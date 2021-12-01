@@ -5,6 +5,7 @@ import matplotlib.animation as animation
 import torch
 import os
 from mpl_toolkits.mplot3d import Axes3D
+from copy import deepcopy
 
 n_attack=pk.coefficients.shape[0]
 n_bank=pk.bank_angles.shape[0]
@@ -156,16 +157,18 @@ def dql(k, net, params, initial_position, initial_velocity):
         max_steps=int(params['max_steps'])
     Q_traj = np.zeros(((max_steps//1000+1,)+(n_attack, n_bank, 3, 3)))
     w = 0
+    visits=np.zeros((n_attack, n_bank, n_beta, 3, 3), dtype='int')
     for episode in range(episodes):
         print(episode)
         k.reset(initial_position, initial_velocity, wind_type, params)
-        duration, reward, Q_traj, w = dql_episode(k, net, optimizer, loss, params, initial_position, initial_velocity, t, Q_traj, w)
+        duration, reward, Q_traj, w, visits = dql_episode(k, net, optimizer, loss, params, initial_position, initial_velocity, t, Q_traj, w, visits)
         t+=duration
         durations.append(duration)
         rewards.append(reward)
     return net, durations, rewards, Q_traj
 
-def dql_episode(k, net, optimizer, loss, params, initial_position, initial_velocity, t, Q_traj, w):
+def dql_episode(k, net, optimizer, loss, params, initial_position, initial_velocity, t, Q_traj, w, visits):
+    target_net=deepcopy(net)
     episode_duration=params['episode_duration']
     learning_step=params['learning_step']
     horizon=int(episode_duration/learning_step)
@@ -176,8 +179,10 @@ def dql_episode(k, net, optimizer, loss, params, initial_position, initial_veloc
     eps0=params['eps0']
     eps_exp=params['eps_decay_rate']
     eps_start=params['eps_decay_start']
+    eps_c=params['eps_c']
     eta_exp=params['eta_decay_rate']
     eta_start=params['eta_decay_start']
+    eta_c=params['eta_c']
     penalty=params['penalty']
     cumulative_reward=0
     initial_beta=k.beta()
@@ -185,7 +190,7 @@ def dql_episode(k, net, optimizer, loss, params, initial_position, initial_veloc
     k.C_l, k.C_d = pk.coefficients[S_t[0],0], pk.coefficients[S_t[0],1]
     k.psi = np.deg2rad(pk.bank_angles[S_t[1]])
     acc=k.accelerations()
-    S_t+=acc
+    #S_t+=acc
     tensor_state=torch.tensor(S_t[0:2]).float()
     tensor_state[0]-=(n_attack/2)
     tensor_state[1]-=(n_bank/2)
@@ -193,13 +198,17 @@ def dql_episode(k, net, optimizer, loss, params, initial_position, initial_veloc
     tensor_state[1]/=n_bank
     #tensor_state[2]/=n_beta
     for i in range(horizon):
+
         t+=1
-        eps=scheduling(eps0, t, eps_start, exp=eps_exp)
+        eps=scheduling_c(eps0, t, eps_start, exp=eps_exp, ac=eps_c)
         q=net(tensor_state).reshape(3,3)
         A_t=eps_greedy_policy(q.detach().numpy(), eps)
+        #A_t=A_t[0].item(),A_t[1].item()
+        visits[S_t+A_t]+=1
+        #print(visits[S_t+A_t])
         #A_t=torch.randint(3,(2,)) if np.random.rand()<eps else (q==torch.max(q)).nonzero().reshape(-1)
         #A_t=A_t[0],A_t[1]
-        optimizer.param_groups[0]['lr']=scheduling(eta0, t, eta_start, exp=eta_exp)
+        optimizer.param_groups[0]['lr']=scheduling_c(eta0, visits[S_t+A_t], eta_start, exp=eta_exp, ac=eta_c)
         new_attack_angle, new_bank_angle=apply_action(S_t, A_t)
         sim_status=k.evolve_system(new_attack_angle, new_bank_angle, integration_steps_per_learning_step, integration_step)
         if not sim_status==0:
@@ -214,7 +223,7 @@ def dql_episode(k, net, optimizer, loss, params, initial_position, initial_veloc
             break
         S_t1 = (new_attack_angle, new_bank_angle, k.beta())
         acc=k.accelerations()
-        S_t1+=acc
+        #S_t1+=acc
         tensor_state=torch.tensor(S_t1[0:2]).float()
         tensor_state[0]-=(n_attack/2)
         tensor_state[1]-=(n_bank/2)
@@ -227,7 +236,7 @@ def dql_episode(k, net, optimizer, loss, params, initial_position, initial_veloc
             print("Simulation ended at learning step: ", i, " reward ", cumulative_reward)
             target=torch.tensor(R_t1)
         else:
-            target=R_t1+gamma*torch.max(net(tensor_state)).detach()
+            target=R_t1+gamma*torch.max(target_net(tensor_state)).detach()
         l=loss(target, q[A_t])
         S_t=S_t1
         optimizer.zero_grad()
@@ -242,7 +251,7 @@ def dql_episode(k, net, optimizer, loss, params, initial_position, initial_veloc
                     Q[attack][bank] = np.array(net(torch.tensor([attack_f, bank_f])).reshape(3,3).detach().numpy())
             Q_traj[w] = Q
             w+=1
-    return i+1, cumulative_reward, Q_traj, w
+    return i+1, cumulative_reward, Q_traj, w, visits
 
 def sarsa(k, Q, params, initial_position, initial_velocity):
     t=0
