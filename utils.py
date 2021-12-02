@@ -230,7 +230,7 @@ def dql_episode(k, net, optimizer, loss, params, initial_position, initial_veloc
         tensor_state[0]/=n_attack
         tensor_state[1]/=n_bank
         #tensor_state[2]/=n_beta
-        R_t1 = k.reward(learning_step)
+        R_t1 = k.reward(learning_step)*10
         cumulative_reward+=R_t1
         if i==int(horizon)-1:
             print("Simulation ended at learning step: ", i, " reward ", cumulative_reward)
@@ -241,13 +241,24 @@ def dql_episode(k, net, optimizer, loss, params, initial_position, initial_veloc
         S_t=S_t1
         optimizer.zero_grad()
         l.backward()
+        '''
+        for p in net.named_parameters():
+            print("Old params:", p[0], p[1])
+            print(p[1].grad)
+        '''
         optimizer.step()
+        '''
+        for p in net.named_parameters():
+            print("New params:", p[0], p[1])
+        '''
         if (t-1)%1000 == 0:
             Q = np.zeros((n_attack, n_bank, 3, 3))
             for attack in range(n_attack):
                 for bank in range(n_bank):
-                    attack_f = attack/n_attack
-                    bank_f = bank/n_bank
+                    attack_f=attack-(n_attack/2)
+                    bank_f=bank-(n_bank/2)
+                    attack_f /= n_attack
+                    bank_f /= n_bank
                     Q[attack][bank] = np.array(net(torch.tensor([attack_f, bank_f])).reshape(3,3).detach().numpy())
             Q_traj[w] = Q
             w+=1
