@@ -91,6 +91,8 @@ class kite(Structure):
         a=libkite.getaccelerations(pointer(self))
         return a.theta, a.phi, a.r
     def reward(self, learning_step):
+        if self.position.r*np.cos(self.position.theta)<10:
+            return libkite.getreward(pointer(self))*learning_step/2
         return libkite.getreward(pointer(self))*learning_step
     def wind_gradient(self, value):
         height=self.position.r*np.cos(self.position.theta)
