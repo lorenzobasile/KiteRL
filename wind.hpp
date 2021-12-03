@@ -307,6 +307,7 @@ class Wind3d_turbo : public Wind3d_turboframe {
                 vt_grid[i][j]=new float [3];
               }
             }
+            std::cout<<"BDD"<<std::endl;
             std::string v_dir, v_name, q_path;
             int start_frame;
             std::cout<<"BDD"<<std::endl;
