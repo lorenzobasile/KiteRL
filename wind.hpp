@@ -287,8 +287,8 @@ protected:
 // Wind of a sequence of frames of a turbolent flow
 class Wind3d_turbo : public Wind3d_turboframe {
     private:
-
-        float*** vt_grid;
+        float vt_grid[n_frames][n_grid_points][3];
+        //float*** vt_grid;
 
 
     public:
@@ -297,6 +297,7 @@ class Wind3d_turbo : public Wind3d_turboframe {
 
         Wind3d_turbo() {
             std::cout<<"BDD"<<std::endl;
+            /*
             vt_grid=new float** [n_frames];
             for(int i=0; i<n_frames; i++){
               vt_grid[i]=new float* [n_grid_points];
@@ -307,6 +308,8 @@ class Wind3d_turbo : public Wind3d_turboframe {
                 vt_grid[i][j]=new float [3];
               }
             }
+            */
+
             std::cout<<"BDD"<<std::endl;
             std::string v_dir, v_name, q_path;
             int start_frame;
