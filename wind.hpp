@@ -296,6 +296,7 @@ class Wind3d_turbo : public Wind3d_turboframe {
         //virtual double* velocity(double x, double y, double z, double t);
 
         Wind3d_turbo() {
+            std::cout<<"BDD"<<std::endl;
             vt_grid=new float** [n_frames];
             for(int i=0; i<n_frames; i++){
               vt_grid[i]=new float* [n_grid_points];
