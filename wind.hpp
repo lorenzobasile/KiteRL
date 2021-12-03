@@ -296,7 +296,6 @@ class Wind3d_turbo : public Wind3d_turboframe {
         //virtual double* velocity(double x, double y, double z, double t);
 
         Wind3d_turbo() {
-            std::cout<<"BDD"<<std::endl;
             /*
             vt_grid=new float** [n_frames];
             for(int i=0; i<n_frames; i++){
@@ -310,12 +309,9 @@ class Wind3d_turbo : public Wind3d_turboframe {
             }
             */
 
-            std::cout<<"BDD"<<std::endl;
             std::string v_dir, v_name, q_path;
             int start_frame;
-            std::cout<<"BDD"<<std::endl;
             try {
-                std::cout<<"DB"<<std::endl;
                 v_dir = "../gdrive/MyDrive/data/v1/";
                 v_name = "velocities";
                 start_frame = 1000;
