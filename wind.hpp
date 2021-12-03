@@ -81,7 +81,7 @@ protected:
             std::ifstream file;
             file.open(path);
             int factor=1;
-            if(path=="q.txt") factor=1;
+            if(path=="../gdrive/MyDrive/data/q.txt") factor=1;
 
             std::string line;
             vecd l = vecd(3);
@@ -102,8 +102,8 @@ protected:
             q_grid[i]=new double[3];
             v_grid[i]=new double[3];
           }
-          read_grid_file("q.txt", q_grid);
-          read_grid_file("v.txt", v_grid);
+          read_grid_file("../gdrive/MyDrive/data/q.txt", q_grid);
+          read_grid_file("../gdrive/MyDrive/data/v.txt", v_grid);
         };
         ~Wind3d_turboframe(){
           for(int i=0; i<n_grid_points; i++){
@@ -308,10 +308,10 @@ class Wind3d_turbo : public Wind3d_turboframe {
             std::string v_dir, v_name, q_path;
             int start_frame;
             try {
-                v_dir = "./v1/";
+                v_dir = "../gdrive/MyDrive/data/v1/";
                 v_name = "velocities";
                 start_frame = 1000;
-                q_path = "q.txt";
+                q_path = "../gdrive/MyDrive/data/q.txt";
                 wind_amplif = 1;
             } catch (std::exception)
             { throw std::runtime_error( "Invalid parameters of turbolent wind" ); }
