@@ -23,6 +23,7 @@ extern "C" {
   }
 
   void init_turbo_wind(kite* k){
+      std::cout<<"Constructing turbo wind"<<std::endl;
       Wind3d_turbo* wind = new Wind3d_turbo;
       wind->init(k->position.r*sin(k->position.theta)*cos(k->position.phi), k->position.r*sin(k->position.theta)*sin(k->position.phi), k->position.r*cos(k->position.theta));
       k->wind=wind;
