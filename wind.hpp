@@ -301,6 +301,7 @@ class Wind3d_turbo : public Wind3d_turboframe {
             for(int i=0; i<n_frames; i++){
               vt_grid[i]=new float* [n_grid_points];
             }
+            std::cout<<"BDD"<<std::endl;
             for(int i=0; i<n_frames; i++){
               for(int j=0; j<n_grid_points; j++){
                 vt_grid[i][j]=new float [3];
