@@ -66,7 +66,7 @@ protected:
         constexpr static double y_size = 100.531*1;
         constexpr static double z_half_size = 50*1;
 
-        const static int n_frames = 2000;
+        const static int n_frames = 3000;
         const double delta_time = 0.2;
 
         double** q_grid;
@@ -328,6 +328,7 @@ class Wind3d_turbo : public Wind3d_turboframe {
             read_grid_files(v_dir, v_name, start_frame);
         }
         ~Wind3d_turbo(){
+          /*
           for(int i=0; i<n_frames; i++){
             for(int j=0; j<n_grid_points; j++){
               delete[] vt_grid[i][j];
@@ -336,7 +337,7 @@ class Wind3d_turbo : public Wind3d_turboframe {
           for(int i=0; i<n_frames; i++){
             delete[] vt_grid[i];
           }
-          delete[] vt_grid;
+          delete[] vt_grid;*/
         }
 
 
