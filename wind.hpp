@@ -307,6 +307,7 @@ class Wind3d_turbo : public Wind3d_turboframe {
             }
             std::string v_dir, v_name, q_path;
             int start_frame;
+            std::cout<<"BDD"<<std::endl;
             try {
                 std::cout<<"DB"<<std::endl;
                 v_dir = "../gdrive/MyDrive/data/v1/";

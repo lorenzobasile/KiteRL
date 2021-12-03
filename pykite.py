@@ -64,7 +64,6 @@ class kite(Structure):
         self.psi=0
         if wind_type=='turbo':
             libkite.init_turbo_wind()
-            print("Calling turbo init from libkite")
         if wind_type=='lin':
             libkite.init_lin_wind(pointer(self), params['v_ground'], params['v_ang_coef'])
         if wind_type=='const':
