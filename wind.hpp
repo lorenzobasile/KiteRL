@@ -4,7 +4,7 @@
 #include "vect.hpp"
 #include <fstream>
 #include "utils.h"
-#include <omp.h>   
+#include <omp.h>
 // 3D WINDS
 
 /* Abstract class */
@@ -288,8 +288,8 @@ protected:
 // Wind of a sequence of frames of a turbolent flow
 class Wind3d_turbo : public Wind3d_turboframe {
     private:
-        float vt_grid[n_frames][n_grid_points][3];
-        //float*** vt_grid;
+        //float vt_grid[n_frames][n_grid_points][3];
+        float*** vt_grid;
 
 
     public:
@@ -297,7 +297,7 @@ class Wind3d_turbo : public Wind3d_turboframe {
         //virtual double* velocity(double x, double y, double z, double t);
 
         Wind3d_turbo() {
-            /*
+
             vt_grid=new float** [n_frames];
             for(int i=0; i<n_frames; i++){
               vt_grid[i]=new float* [n_grid_points];
@@ -308,7 +308,7 @@ class Wind3d_turbo : public Wind3d_turboframe {
                 vt_grid[i][j]=new float [3];
               }
             }
-            */
+
 
             std::string v_dir, v_name, q_path;
             int start_frame;
@@ -325,7 +325,7 @@ class Wind3d_turbo : public Wind3d_turboframe {
             read_grid_files(v_dir, v_name, start_frame);
         }
         ~Wind3d_turbo(){
-          /*
+
           for(int i=0; i<n_frames; i++){
             for(int j=0; j<n_grid_points; j++){
               delete[] vt_grid[i][j];
@@ -334,7 +334,7 @@ class Wind3d_turbo : public Wind3d_turboframe {
           for(int i=0; i<n_frames; i++){
             delete[] vt_grid[i];
           }
-          delete[] vt_grid;*/
+          delete[] vt_grid;
         }
 
 
