@@ -66,7 +66,7 @@ protected:
         constexpr static double y_size = 100.531*1;
         constexpr static double z_half_size = 50*1;
 
-        const static int n_frames = 3000;
+        const static int n_frames = 1500;
         const double delta_time = 0.2;
 
         double** q_grid;
