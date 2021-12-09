@@ -160,9 +160,7 @@ def dql(k, net, params, initial_position, initial_velocity):
     visits=np.zeros((n_attack, n_bank, n_beta, 3, 3), dtype='int')
     for episode in range(episodes):
         print(episode)
-        print("DS")
         k.reset(initial_position, initial_velocity, wind_type, params)
-        print("DS2")
         duration, reward, Q_traj, w, visits = dql_episode(k, net, optimizer, loss, params, initial_position, initial_velocity, t, Q_traj, w, visits)
         t+=duration
         durations.append(duration)

@@ -1,7 +1,9 @@
 SRC = main.cpp
-CXX = g++11
+CXX = g++
 CXXFLAGS = -O3 -std=c++14 -Ienv utils.cpp
-LIBFLAGS = -static-libstdc++  -Wno-return-type-c-linkage -shared -fpic  -o 
+LIBFLAGS = -static-libstdc++  -Wno-return-type-c-linkage -shared -fpic  -o
+OPENMP = -fopenmp -Dparallel
+#on M1 remove -static-libstdc++ and add --target=x86_64-apple-darwin
 EXE = $(SRC:.cpp=.x)
 
 .SUFFIXES:
@@ -12,6 +14,8 @@ SUFFIXES =
 VPATH = env
 
 all: $(EXE) libkite.so
+
+parallel: $(OPENMP) libkite.so
 
 
 .PHONY: all

@@ -4,7 +4,9 @@
 #include "vect.hpp"
 #include <fstream>
 #include "utils.h"
+#ifdef parallel
 #include <omp.h>
+#endif
 // 3D WINDS
 
 /* Abstract class */
@@ -297,12 +299,12 @@ class Wind3d_turbo : public Wind3d_turboframe {
         //virtual double* velocity(double x, double y, double z, double t);
 
         Wind3d_turbo() {
-            
+
             /*vt_grid=new float** [n_frames];
             for(int i=0; i<n_frames; i++){
               vt_grid[i]=new float* [n_grid_points];
             }
-            
+
             for(int i=0; i<n_frames; i++){
               for(int j=0; j<n_grid_points; j++){
                 vt_grid[i][j]=new float [3];
@@ -322,10 +324,10 @@ class Wind3d_turbo : public Wind3d_turboframe {
             { throw std::runtime_error( "Invalid parameters of turbolent wind" ); }
 
             read_grid_file(q_path, q_grid);
-            read_grid_files(v_dir, v_name, start_frame); 
+            read_grid_files(v_dir, v_name, start_frame);
         }
         ~Wind3d_turbo(){
-          
+
          /* for(int i=0; i<n_frames; i++){
             for(int j=0; j<n_grid_points; j++){
               delete[] vt_grid[i][j];
@@ -342,7 +344,9 @@ class Wind3d_turbo : public Wind3d_turboframe {
 
             Perc perc(10, n_frames);
             std::cout << "Reading the velocities..";
+            #ifdef parallel
             #pragma omp parallel for
+            #endif
             for (int t=0; t<n_frames; t++) {
                 perc.step(t);
                 std::string path = dir + name + std::to_string(t+start_frame) + ".txt";
