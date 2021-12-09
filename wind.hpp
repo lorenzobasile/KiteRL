@@ -67,7 +67,7 @@ protected:
         constexpr static double y_size = 100.531*1;
         constexpr static double z_half_size = 50*1;
 
-        const static int n_frames = 3000;
+        const static int n_frames = 30;
         const double delta_time = 0.2;
 
         double** q_grid;
@@ -297,12 +297,12 @@ class Wind3d_turbo : public Wind3d_turboframe {
         //virtual double* velocity(double x, double y, double z, double t);
 
         Wind3d_turbo() {
-            /*
-            vt_grid=new float** [n_frames];
+            
+            /*vt_grid=new float** [n_frames];
             for(int i=0; i<n_frames; i++){
               vt_grid[i]=new float* [n_grid_points];
             }
-            std::cout<<"BDD"<<std::endl;
+            
             for(int i=0; i<n_frames; i++){
               for(int j=0; j<n_grid_points; j++){
                 vt_grid[i][j]=new float [3];
@@ -313,20 +313,20 @@ class Wind3d_turbo : public Wind3d_turboframe {
             std::string v_dir, v_name, q_path;
             int start_frame;
             try {
-                v_dir = "../gdrive/MyDrive/data/v1/";
+                v_dir = "../Kite_power/data/kite3d_turbo/v1/";
                 v_name = "velocities";
                 start_frame = 1000;
-                q_path = "../gdrive/MyDrive/data/q.txt";
+                q_path = "../Kite_power/data/kite3d_turbo/q.txt";
                 wind_amplif = 1;
             } catch (std::exception)
             { throw std::runtime_error( "Invalid parameters of turbolent wind" ); }
 
             read_grid_file(q_path, q_grid);
-            read_grid_files(v_dir, v_name, start_frame);
+            read_grid_files(v_dir, v_name, start_frame); 
         }
         ~Wind3d_turbo(){
-          /*
-          for(int i=0; i<n_frames; i++){
+          
+         /* for(int i=0; i<n_frames; i++){
             for(int j=0; j<n_grid_points; j++){
               delete[] vt_grid[i][j];
             }

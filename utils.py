@@ -160,7 +160,9 @@ def dql(k, net, params, initial_position, initial_velocity):
     visits=np.zeros((n_attack, n_bank, n_beta, 3, 3), dtype='int')
     for episode in range(episodes):
         print(episode)
+        print("DS")
         k.reset(initial_position, initial_velocity, wind_type, params)
+        print("DS2")
         duration, reward, Q_traj, w, visits = dql_episode(k, net, optimizer, loss, params, initial_position, initial_velocity, t, Q_traj, w, visits)
         t+=duration
         durations.append(duration)
@@ -321,7 +323,7 @@ def sarsa(k, Q, params, initial_position, initial_velocity):
             S_t1 = (new_attack_angle, new_bank_angle, k.beta())
             R_t1 = k.reward(learning_step)
             cumulative_reward+=R_t1
-            A_t1=eps_greedy_policy(Q[S_t1], S_t1, eps)
+            A_t1=eps_greedy_policy(Q[S_t1], eps)
             if i==int(horizon)-1:
                 Q=terminal_step(Q, S_t, A_t, R_t1, eta)
                 print(ep, "Simulation ended at learning step: ", i, " reward ", cumulative_reward)

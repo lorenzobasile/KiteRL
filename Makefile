@@ -1,7 +1,7 @@
 SRC = main.cpp
-CXX = g++
+CXX = g++11
 CXXFLAGS = -O3 -std=c++14 -Ienv utils.cpp
-LIBFLAGS =  --target=x86_64-apple-darwin -Wno-return-type-c-linkage -shared -fpic  -o 
+LIBFLAGS = -static-libstdc++  -Wno-return-type-c-linkage -shared -fpic  -o 
 EXE = $(SRC:.cpp=.x)
 
 .SUFFIXES:
