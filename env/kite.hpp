@@ -17,6 +17,7 @@ public:
   double C_l;
   double C_d;
   double psi;
+  double time=0;
 
   kite()=default;
   kite(vect initial_position, vect initial_velocity, Wind3d* wind_ptr): position{initial_position}, velocity{initial_velocity}, wind{wind_ptr}, C_l{0.2}, C_d{0.05}, psi{0} {
@@ -26,7 +27,8 @@ public:
   ~kite()=default;
 
   int update_state(const double step){
-    wind->velocity(position.r*sin(position.theta)*cos(position.phi), position.r*sin(position.theta)*sin(position.phi), position.r*cos(position.theta), 14);
+    wind->velocity(position.r*sin(position.theta)*cos(position.phi), position.r*sin(position.theta)*sin(position.phi), position.r*cos(position.theta), time);
+    time+=step;
     auto accel=get_accelerations();
     if(!accel.first){
       return 2;
