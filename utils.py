@@ -156,16 +156,18 @@ def dql(k, net, params, initial_position, initial_velocity):
     else:
         max_steps=int(params['max_steps'])
     Q_traj = np.zeros(((max_steps//1000+1,)+(n_attack, n_bank, 3, 3)))
+    l_traj = np.zeros((episodes,))
     w = 0
     visits=np.zeros((n_attack, n_bank, n_beta, 3, 3), dtype='int')
     for episode in range(episodes):
         print(episode)
         k.reset(initial_position, initial_velocity, wind_type, params)
-        duration, reward, Q_traj, w, visits = dql_episode(k, net, optimizer, loss, params, initial_position, initial_velocity, t, Q_traj, w, visits)
+        duration, reward, Q_traj, l, w, visits = dql_episode(k, net, optimizer, loss, params, initial_position, initial_velocity, t, Q_traj, w, visits)
+        l_traj[episode] = l
         t+=duration
         durations.append(duration)
         rewards.append(reward)
-    return net, durations, rewards, Q_traj
+    return net, durations, rewards, Q_traj, l_traj
 
 def dql_episode(k, net, optimizer, loss, params, initial_position, initial_velocity, t, Q_traj, w, visits):
     target_net=deepcopy(net)
@@ -262,7 +264,7 @@ def dql_episode(k, net, optimizer, loss, params, initial_position, initial_veloc
                     Q[attack][bank] = np.array(net(torch.tensor([attack_f, bank_f])).reshape(3,3).detach().numpy())
             Q_traj[w] = Q
             w+=1
-    return i+1, cumulative_reward, Q_traj, w, visits
+    return i+1, cumulative_reward, Q_traj, l, w, visits
 
 def sarsa(k, Q, params, initial_position, initial_velocity):
     t=0
