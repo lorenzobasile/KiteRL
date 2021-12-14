@@ -4,8 +4,9 @@
 #include "vect.hpp"
 #include <fstream>
 #include "utils.h"
+#ifdef PARALLEL
 #include <omp.h>
-
+#endif
 // 3D WINDS
 
 /* Abstract class */
@@ -343,7 +344,9 @@ class Wind3d_turbo : public Wind3d_turboframe {
 
             Perc perc(10, n_frames);
             std::cout << "Reading the velocities..";
+            #ifdef PARALLEL
             #pragma omp parallel for
+            #endif
             for (int t=0; t<n_frames; t++) {
                 perc.step(t);
                 std::string path = dir + name + std::to_string(t+start_frame) + ".txt";

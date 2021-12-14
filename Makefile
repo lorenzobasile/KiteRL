@@ -1,7 +1,8 @@
-SRC = main.cpp
 CXX = g++
 CXXFLAGS = -O3 -std=c++14 -Ienv utils.cpp
-LIBFLAGS = -fopenmp -static-libstdc++  -Wno-return-type-c-linkage -shared -fpic  -o
+LIBFLAGS =  -Wno-return-type-c-linkage -shared -fpic  -o
+OMPFLAGS = -fopenmp -static-libstdc++ -DPARALLEL
+M1MAC = --target=x86_64-apple-darwin
 #on M1 remove -fopenmp -static-libstdc++ and add --target=x86_64-apple-darwin
 EXE = $(SRC:.cpp=.x)
 
@@ -12,8 +13,15 @@ SUFFIXES =
 
 VPATH = env
 
-all: $(EXE) libkite.so
+parallel: libkite.cpp
+			$(CXX) $(OMPFLAGS) $(LIBFLAGS) libkite.so $< $(CXXFLAGS)
 
+m1: libkite.cpp
+			$(CXX) $(M1MAC) $(LIBFLAGS) libkite.so $< $(CXXFLAGS)
+
+x86: libkite.so
+
+all: libkite.so
 
 
 
@@ -33,6 +41,5 @@ clean:
 
 .PHONY: clean
 
-main.x: kite.hpp constants.hpp vect.hpp utils.cpp wind.hpp
 
 libkite.so: kite.hpp constants.hpp vect.hpp utils.cpp wind.hpp
