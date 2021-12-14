@@ -20,22 +20,7 @@ coefficients=np.array([
 ])
 bank_angles=np.array([-3, -2, -1, 0, 1, 2, 3])
 n_beta=1
-'''
-class Wind3d(Structure):
-    _fields_ = [
-        ('m_vel', POINTER(c_double)),
-    ]
-    def __init__(self):
-        pass
 
-class Wind3d_lin(Wind3d):
-    _fields_ = [
-        ('vel_ground', c_double),
-        ('ang_coef', c_double)
-    ]
-    def _init_(self):
-        pass
-'''
 class vect(Structure):
     _fields_ = [
         ('theta', c_double),
@@ -83,8 +68,9 @@ class kite(Structure):
     def simulate(self, step):
         return libkite.simulation_step(pointer(self), step)
     def evolve_system(self, attack_angle, bank_angle, integration_steps, step):
-        self.C_l, self.C_d = coefficients[attack_angle,0], coefficients[attack_angle,1]
-        self.psi = np.deg2rad(bank_angles[bank_angle])
+        self.update_coefficients(attack_angle, bank_angle)
+        #C_l, self.C_d = coefficients[attack_angle,0], coefficients[attack_angle,1]
+        #self.psi = np.deg2rad(bank_angles[bank_angle])
         return libkite.simulate(pointer(self), integration_steps, step)
     def beta(self):
         #b=np.digitize(libkite.getbeta(pointer(self)), np.linspace(-np.pi/2, np.pi/2, n_beta))
@@ -97,9 +83,9 @@ class kite(Structure):
         if self.position.r*np.cos(self.position.theta)<10:
             return libkite.getreward(pointer(self))*learning_step/2
         return libkite.getreward(pointer(self))*learning_step
-    def wind_gradient(self, value):
-        height=self.position.r*np.cos(self.position.theta)
-        return vect(value*height,0,0)
+    def update_coefficients(self, attack_angle, bank_angle):
+        self.C_l, self.C_d = coefficients[attack_angle,0], coefficients[attack_angle,1]
+        self.psi = np.deg2rad(bank_angles[bank_angle])
 
 
 def setup_lib(lib_path):

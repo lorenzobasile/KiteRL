@@ -121,20 +121,6 @@ def terminal_step(Q, S_t, A_t, R_t1, eta):
     Q[S_t+A_t]=Q[S_t+A_t]+eta*(R_t1-Q[S_t+A_t])
     return Q
 
-def plot_trajectory(theta, phi, r, save=None, marker='-'):
-    fig=plt.figure()
-    ax = fig.add_subplot(111, projection = '3d')
-    x=np.multiply(r, np.multiply(np.sin(theta), np.cos(phi)))
-    y=np.multiply(r, np.multiply(np.sin(theta), np.sin(phi)))
-    z=np.multiply(r, np.cos(theta))
-    line,=ax.plot(x, y, z, marker)
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
-    ax.set_zlabel("z")
-    if save is not None:
-        plt.savefig(save)
-    plt.show()
-
 def dql(k, net, params, initial_position, initial_velocity):
     durations=[]
     rewards=[]
@@ -189,8 +175,9 @@ def dql_episode(k, net, optimizer, loss, params, initial_position, initial_veloc
     cumulative_reward=0
     initial_beta=k.beta()
     S_t=(np.random.randint(0,n_attack), np.random.randint(0,n_bank), initial_beta)
-    k.C_l, k.C_d = pk.coefficients[S_t[0],0], pk.coefficients[S_t[0],1]
-    k.psi = np.deg2rad(pk.bank_angles[S_t[1]])
+    k.update_coefficients(S_t[0], S_t[1])
+    #k.C_l, k.C_d = pk.coefficients[S_t[0],0], pk.coefficients[S_t[0],1]
+    #k.psi = np.deg2rad(pk.bank_angles[S_t[1]])
     acc=k.accelerations()
     #S_t+=acc
     tensor_state=torch.tensor(S_t[0:2]).float()
@@ -238,7 +225,8 @@ def dql_episode(k, net, optimizer, loss, params, initial_position, initial_veloc
             print("Simulation ended at learning step: ", i, " reward ", cumulative_reward)
             target=torch.tensor(R_t1)
         else:
-            target=R_t1+gamma*torch.max(target_net(tensor_state)).detach()
+            with torch.no_grad():
+                target=R_t1+gamma*torch.max(target_net(tensor_state)).detach()
         l=loss(target, q[A_t])
         S_t=S_t1
         optimizer.zero_grad()
@@ -302,8 +290,7 @@ def sarsa(k, Q, params, initial_position, initial_velocity):
         k.reset(initial_position, initial_velocity, wind_type, params)
         initial_beta=k.beta()
         S_t=(np.random.randint(0,n_attack), np.random.randint(0,n_bank), initial_beta)
-        k.C_l, k.C_d = pk.coefficients[S_t[0],0], pk.coefficients[S_t[0],1]
-        k.psi = np.deg2rad(pk.bank_angles[S_t[1]])
+        k.update_coefficients(S_t[0], S_t[1])
         A_t=eps_greedy_policy(Q[S_t], eps0)
         for i in range(horizon):
             visits[S_t+A_t]+=1
