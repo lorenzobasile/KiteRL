@@ -13,6 +13,8 @@ SUFFIXES =
 
 VPATH = env
 
+all: libkite.so
+
 parallel: libkite.cpp
 			$(CXX) $(OMPFLAGS) $(LIBFLAGS) libkite.so $< $(CXXFLAGS)
 
@@ -20,9 +22,6 @@ m1: libkite.cpp
 			$(CXX) $(M1MAC) $(LIBFLAGS) libkite.so $< $(CXXFLAGS)
 
 x86: libkite.so
-
-all: libkite.so
-
 
 
 .PHONY: all
