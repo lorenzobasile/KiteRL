@@ -300,7 +300,7 @@ def sarsa(k, Q, params, initial_position, initial_velocity):
             new_attack_angle, new_bank_angle=apply_action(S_t, A_t)
             sim_status=k.evolve_system(new_attack_angle, new_bank_angle, integration_steps_per_learning_step, integration_step)
             if not sim_status==0:
-                R_t1 = scheduling(-penalty, i, horizon/4)
+                R_t1 = scheduling(-penalty, i, horizon)
                 cumulative_reward+=R_t1
                 print(ep, "Simulation failed at learning step: ", i, " reward ", cumulative_reward)
                 rewards.append(cumulative_reward)
@@ -311,11 +311,12 @@ def sarsa(k, Q, params, initial_position, initial_velocity):
             R_t1 = k.reward(learning_step)
             cumulative_reward+=R_t1
             A_t1=eps_greedy_policy(Q[S_t1], eps)
-            if i==int(horizon)-1:
+            if k.position.r>950 or i==int(horizon)-1:
                 Q=terminal_step(Q, S_t, A_t, R_t1, eta)
                 print(ep, "Simulation ended at learning step: ", i, " reward ", cumulative_reward)
                 rewards.append(cumulative_reward)
                 durations.append(i+1)
+                break
             else:
                 Q=step(Q, S_t, A_t, R_t1, S_t1, A_t1, eta, gamma)
             S_t=S_t1
@@ -323,4 +324,5 @@ def sarsa(k, Q, params, initial_position, initial_velocity):
             if (t-1)%1000 == 0:
                 Q_traj[w] = Q
                 w+=1
+
     return Q_traj, Q, durations, rewards

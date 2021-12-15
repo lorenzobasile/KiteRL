@@ -69,7 +69,7 @@ protected:
         constexpr static double y_size = 100.531*1;
         constexpr static double z_half_size = 50*1;
 
-        const static int n_frames = 30;
+        const static int n_frames = 1;
         const double delta_time = 0.2;
 
         double** q_grid;
@@ -83,8 +83,7 @@ protected:
         void read_grid_file(std::string path, double** grid_data){
             std::ifstream file;
             file.open(path);
-            int factor=1;
-            if(path=="../gdrive/MyDrive/data/q.txt") factor=1;
+            int factor=10;
 
             std::string line;
             vecd l = vecd(3);
@@ -315,10 +314,10 @@ class Wind3d_turbo : public Wind3d_turboframe {
             std::string v_dir, v_name, q_path;
             int start_frame;
             try {
-                v_dir = "../Kite_power/data/kite3d_turbo/v1/";
+                v_dir = "./";
                 v_name = "velocities";
                 start_frame = 1000;
-                q_path = "../Kite_power/data/kite3d_turbo/q.txt";
+                q_path = "./q.txt";
                 wind_amplif = 1;
             } catch (std::exception)
             { throw std::runtime_error( "Invalid parameters of turbolent wind" ); }

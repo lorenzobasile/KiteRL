@@ -19,7 +19,7 @@ coefficients=np.array([
     [1.05, 0.21]
 ])
 bank_angles=np.array([-3, -2, -1, 0, 1, 2, 3])
-n_beta=1
+n_beta=10
 
 class vect(Structure):
     _fields_ = [
@@ -73,9 +73,9 @@ class kite(Structure):
         #self.psi = np.deg2rad(bank_angles[bank_angle])
         return libkite.simulate(pointer(self), integration_steps, step)
     def beta(self):
-        #b=np.digitize(libkite.getbeta(pointer(self)), np.linspace(-np.pi/2, np.pi/2, n_beta))
-        b=libkite.getbeta(pointer(self))
-        return 0
+        b=np.digitize(libkite.getbeta(pointer(self)), np.linspace(-np.pi/2, np.pi/2, n_beta))
+        #b=libkite.getbeta(pointer(self))
+        return b
     def accelerations(self):
         a=libkite.getaccelerations(pointer(self))
         return a.theta, a.phi, a.r
