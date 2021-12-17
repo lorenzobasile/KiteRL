@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -O3 -std=c++14 -Ienv utils.cpp
+CXXFLAGS = -O3 -std=c++14 -Ienv -Ienv/utils env/utils/utils.cpp
 LIBFLAGS =  -Wno-return-type-c-linkage -shared -fpic  -o
 OMPFLAGS = -fopenmp -static-libstdc++ -DPARALLEL
 M1MAC = --target=x86_64-apple-darwin
@@ -26,6 +26,7 @@ x86: libkite.so
 
 .PHONY: all
 
+
 %.x: %.cpp
 
 	$(CXX) $< -o $@ $(CXXFLAGS)
@@ -41,4 +42,5 @@ clean:
 .PHONY: clean
 
 
-libkite.so: kite.hpp constants.hpp vect.hpp utils.cpp wind.hpp
+
+libkite.so: kite.hpp constants.hpp vect.hpp env/utils/utils.cpp wind.hpp

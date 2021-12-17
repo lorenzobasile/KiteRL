@@ -3,7 +3,7 @@
 
 #include "vect.hpp"
 #include <fstream>
-#include "utils.h"
+#include "utils/utils.h"
 #ifdef PARALLEL
 #include <omp.h>
 #endif

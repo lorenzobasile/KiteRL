@@ -1,9 +1,10 @@
 import numpy as np
-import pykite as pk
-from utils import *
+import learning.pykite as pk
+from learning.utils import *
+from learning.algorithms import *
 import matplotlib.pyplot as plt
 import os
-from models import NN
+from learning.models import NN
 import sys
 
 filename=sys.argv[1]
