@@ -2,8 +2,8 @@ import torch
 from time import time
 
 class ExperienceBuffer:
-    def __init__(self, size, ns, na):
-        self.data=torch.zeros((size, ns+na+1+ns+1))
+    def __init__(self, size, n_states, n_actions):
+        self.data=torch.zeros((size, n_states+n_actions+1+n_states+1))
         self.size=size
         self.current_size=0
         self.insertion_point=0

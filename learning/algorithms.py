@@ -8,6 +8,8 @@ from time import time
 n_attack=pk.coefficients.shape[0]
 n_bank=pk.bank_angles.shape[0]
 n_beta=pk.n_beta
+n_states=6
+n_actions=2
 
 def apply_action(state, action):
     if action==(1,1):
@@ -84,7 +86,7 @@ def dql(k, net, params, initial_position, initial_velocity):
     Q_traj = np.zeros(((max_steps//1000+1,)+(n_attack, n_bank, 3, 3)))
     l_traj = np.zeros((episodes,))
     w = 0
-    experience_buffer=ExperienceBuffer(buffer_size, 6, 2)
+    experience_buffer=ExperienceBuffer(1, n_states=6, n_actions=2)
     visits=np.zeros((n_attack, n_bank, n_beta, 3, 3), dtype='int')
     for episode in range(episodes):
         print(episode)
@@ -136,7 +138,7 @@ def dql_episode(k, net, optimizer, experience_buffer, loss, params, initial_posi
             experience_buffer.insert(torch.cat([tensor_state, torch.tensor(A_t), torch.tensor(R_t1).reshape(1), tensor_state, torch.tensor(0).reshape(1)]))
             cumulative_reward+=R_t1
             target=torch.tensor(R_t1)
-            l=compute_loss(loss, experience_buffer.get_batch(batch_size), net)
+            l=compute_loss(loss, experience_buffer.get_batch(batch_size), net, target_net)
             print("epsilon ", eps, " eta", optimizer.param_groups[0]['lr'], "Simulation failed at learning step: ", i, " reward ", cumulative_reward)
             optimizer.zero_grad()
             l.backward()
@@ -154,7 +156,7 @@ def dql_episode(k, net, optimizer, experience_buffer, loss, params, initial_posi
             print("Simulation ended at learning step: ", i, " reward ", cumulative_reward)
         else:
             experience_buffer.insert(torch.cat([tensor_state, torch.tensor(A_t), torch.tensor(R_t1).reshape(1), new_tensor_state, torch.tensor(1).reshape(1)]))
-        l=compute_loss(loss, experience_buffer.get_batch(batch_size), net)
+        l=compute_loss(loss, experience_buffer.get_batch(batch_size), net, target_net)
         S_t=S_t1
         optimizer.zero_grad()
         l.backward()
@@ -181,15 +183,15 @@ def reshape_actions(actions):
     oned_actions=actions[:,0]*3+actions[:,1]
     return oned_actions
 
-def compute_loss(loss, batch, net):
-    s=batch[:,:6]
-    a=batch[:,6:8]
-    r=batch[:,8]
+def compute_loss(loss, batch, net, target_net):
+    s=batch[:,:n_states]
+    a=batch[:,n_states:n_states+n_actions]
+    r=batch[:,n_states+n_actions]
     a=reshape_actions(a)
-    sprime=batch[:,9:15]
-    notfinished=batch[:,15]
+    sprime=batch[:,n_states+n_actions:-2]
+    notfinished=batch[:,-1]
     with torch.no_grad():
-        target=r+1*torch.max(net(sprime)).detach()*notfinished
+        target=r+1*torch.max(target_net(sprime)).detach()*notfinished
     return loss(target, torch.gather(net(s), 1, a.long().reshape(-1,1)).reshape(-1))
 
 
