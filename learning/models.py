@@ -4,7 +4,7 @@ import torch.nn as nn
 class NN(nn.Module):
     def __init__(self, scale=1, init_q=None):
         super().__init__()
-        self.layer1=nn.Linear(2,32, bias=True)
+        self.layer1=nn.Linear(6,32, bias=True)
         self.layer2=nn.Linear(32,32, bias=True)
         self.layer3=nn.Linear(32,9, bias=True)
         #self.layer2=nn.Linear(16*scale,9, bias=False)
