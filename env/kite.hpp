@@ -4,7 +4,7 @@
 #include <math.h>
 #include "vect.hpp"
 #include "constants.hpp"
-#include "../wind.hpp"
+#include "wind.hpp"
 #include <utility>
 
 class kite{
