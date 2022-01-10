@@ -1,9 +1,14 @@
 import numpy as np
+<<<<<<< Updated upstream
 import pykite as pk
 from utils import *
 import matplotlib.pyplot as plt
 import os
 from models import NN
+=======
+from learning.algorithms import *
+from learning.models import NN
+>>>>>>> Stashed changes
 import sys
 
 filename=sys.argv[1]
@@ -23,9 +28,12 @@ path = filename[:-14]
 if params['learning_type']=='sarsa':
     Q=np.load(path + "best_quality.npy")
 else:
+    torch.set_printoptions(threshold=10_000)
     net=NN()
     net.load_state_dict(torch.load(path + "best_weights.h5"))
     net.eval()
+    for p in net.named_parameters():
+        print(p)
 t=0
 durations=[]
 rewards=[]
@@ -76,6 +84,7 @@ while ep<=episodes:
             tensor_state[1]-=(n_bank/2)
             tensor_state[0]/=n_attack
             tensor_state[1]/=n_bank
+            tensor_state=torch.nn.functional.one_hot(torch.tensor([S_t[0]*n_bank+S_t[1]]), num_classes=n_bank*n_attack).float().reshape(-1)
             q=net(tensor_state).reshape(3,3)
             A_t=greedy_action(q.detach().numpy())
         else:
