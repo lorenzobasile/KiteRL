@@ -1,14 +1,6 @@
 import numpy as np
-<<<<<<< Updated upstream
-import pykite as pk
-from utils import *
-import matplotlib.pyplot as plt
-import os
-from models import NN
-=======
 from learning.algorithms import *
 from learning.models import NN
->>>>>>> Stashed changes
 import sys
 
 filename=sys.argv[1]
@@ -87,6 +79,7 @@ while ep<=episodes:
             tensor_state=torch.nn.functional.one_hot(torch.tensor([S_t[0]*n_bank+S_t[1]]), num_classes=n_bank*n_attack).float().reshape(-1)
             q=net(tensor_state).reshape(3,3)
             A_t=greedy_action(q.detach().numpy())
+            A_t=best_policy(S_t[0:2])
         else:
             A_t=greedy_action(Q[S_t])
         t+=1
