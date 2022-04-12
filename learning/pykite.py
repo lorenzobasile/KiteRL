@@ -73,9 +73,12 @@ class kite(Structure):
         #self.psi = np.deg2rad(bank_angles[bank_angle])
         return libkite.simulate(pointer(self), integration_steps, step)
     def beta(self):
-        #b=np.digitize(libkite.getbeta(pointer(self)), np.linspace(-np.pi/2, np.pi/2, n_beta))
-        b=libkite.getbeta(pointer(self))
+        b=np.digitize(libkite.getbeta(pointer(self)), np.linspace(-np.pi/2, np.pi/2, n_beta))
+        #b=libkite.getbeta(pointer(self))
         return b
+    def vrel(self):
+        a=libkite.getvrel(pointer(self))
+        return a.theta, a.phi, a.r
     def accelerations(self):
         a=libkite.getaccelerations(pointer(self))
         return a.theta, a.phi, a.r
@@ -98,6 +101,8 @@ def setup_lib(lib_path):
     lib.init_lin_wind.argtypes=[POINTER(kite), c_double, c_double]
     lib.getbeta.argtypes = [POINTER(kite)]
     lib.getbeta.restype=c_double
+    lib.getvrel.argtypes = [POINTER(kite)]
+    lib.getvrel.restype=vect
     lib.getaccelerations.argtypes = [POINTER(kite)]
     lib.getaccelerations.restype=vect
     lib.getreward.argtypes = [POINTER(kite)]

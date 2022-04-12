@@ -59,6 +59,12 @@ public:
     return beta;
   }
 
+  vect getvrel(){
+    vect W_a{velocity.theta*position.r, velocity.phi*position.r*sin(position.theta), velocity.r};
+    W_a=W_a.tocartesian(position);
+    return wind->to_vect()-W_a;
+  }
+
   std::pair<bool, vect> get_accelerations(){
     //std::cout<<(*wind).m_vel[0];
     std::pair<bool, vect> f=compute_force();

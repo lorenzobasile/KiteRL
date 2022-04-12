@@ -8,7 +8,7 @@ from time import time
 n_attack=pk.coefficients.shape[0]
 n_bank=pk.bank_angles.shape[0]
 n_beta=pk.n_beta
-n_states=n_attack*n_bank+4
+n_states=3
 n_actions=2
 
 def apply_action(state, action):
@@ -80,7 +80,7 @@ def dql(k, net, params, initial_position, initial_velocity):
     else:
         optimizer=torch.optim.SGD(net.parameters(), lr=lr, weight_decay=0.00)
     #scheduler=torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=1)
-    scheduler=torch.optim.lr_scheduler.StepLR(optimizer, 10000)
+    scheduler=torch.optim.lr_scheduler.StepLR(optimizer, 3000)
     if params['loss']=='huber':
         loss=torch.nn.SmoothL1Loss()
     else:
@@ -92,7 +92,8 @@ def dql(k, net, params, initial_position, initial_velocity):
         max_steps=int(params['episodes']*params['episode_duration']/params['learning_step'])
     else:
         max_steps=int(params['max_steps'])
-    Q_traj = np.zeros(((max_steps//100+1,)+(n_attack, n_bank, 3, 3)))
+    Q_traj = np.zeros(((max_steps//1000+1,)+(n_attack, n_bank, 3, 3)))
+    L = np.zeros(max_steps//1000+1)
     l_traj = np.zeros((episodes,))
     w = 0
     experience_buffer=ExperienceBuffer(buffer_size, n_states, n_actions)
@@ -100,15 +101,15 @@ def dql(k, net, params, initial_position, initial_velocity):
     for episode in range(episodes):
         print(episode)
         k.reset(initial_position, initial_velocity, wind_type, params)
-        duration, reward, experience_buffer, Q_traj, l, w, visits, net = dql_episode(k, net, optimizer, experience_buffer, loss, params, initial_position, initial_velocity, t, Q_traj, w, visits)
+        duration, reward, experience_buffer, Q_traj, L, w, visits, net = dql_episode(k, net, optimizer, experience_buffer, loss, params, initial_position, initial_velocity, t, Q_traj, L, w, visits)
         scheduler.step()
-        l_traj[episode] = l
+        #l_traj[episode] = l
         t+=duration
         durations.append(duration)
         rewards.append(reward)
-    return net, durations, rewards, Q_traj, l_traj
+    return net, durations, rewards, Q_traj, L
 
-def dql_episode(k, net, optimizer, experience_buffer, loss, params, initial_position, initial_velocity, t, Q_traj, w, visits):
+def dql_episode(k, net, optimizer, experience_buffer, loss, params, initial_position, initial_velocity, t, Q_traj, L, w, visits):
     target_net=deepcopy(net)
     episode_duration=params['episode_duration']
     learning_step=params['learning_step']
@@ -129,21 +130,21 @@ def dql_episode(k, net, optimizer, experience_buffer, loss, params, initial_posi
     cumulative_reward=0
     S_t=(np.random.randint(0,n_attack), np.random.randint(0,n_bank), k.beta())
     k.update_coefficients(S_t[0], S_t[1])
-    acc=k.accelerations()
-    S_t+=acc
-    #tensor_state=torch.tensor(S_t[:2]).float()
-    #tensor_state[0]-=(n_attack/2)
-    #tensor_state[1]-=(n_bank/2)
-    #tensor_state[0]/=n_attack
-    #tensor_state[1]/=n_bank
-    tensor_state=torch.nn.functional.one_hot(torch.tensor([S_t[0]*n_bank+S_t[1]]), num_classes=n_bank*n_attack).float().reshape(-1)
-    tensor_state=torch.cat([tensor_state, torch.tensor(S_t[2:])])
-    #tensor_state[2]/=(np.pi/2)
+    vrel=k.accelerations()
+    #S_t+=vrel
+    tensor_state=torch.tensor(S_t[:3]).float()
+    tensor_state[0]-=(n_attack/2)
+    tensor_state[1]-=(n_bank/2)
+    tensor_state[0]/=n_attack
+    tensor_state[1]/=n_bank
+    #tensor_state=torch.nn.functional.one_hot(torch.tensor([S_t[0]*n_bank+S_t[1]]), num_classes=n_bank*n_attack).float().reshape(-1)
+    tensor_state=torch.cat([tensor_state, torch.tensor(S_t[3:])])
+    tensor_state[2]/=(np.pi/2)
     for i in range(horizon):
         target_net=deepcopy(net)
         t+=1
         '''
-        if (t-1)%100 == 0:
+        if (t-1)%1000 == 0:
 
             Q = np.zeros((n_attack, n_bank, 3, 3))
             for attack in range(n_attack):
@@ -152,7 +153,8 @@ def dql_episode(k, net, optimizer, experience_buffer, loss, params, initial_posi
                     bank_f=bank-(n_bank/2)
                     attack_f /= n_attack
                     bank_f /= n_bank
-                    Q[attack][bank] = np.array(net(torch.nn.functional.one_hot(torch.tensor([attack*n_bank+bank]), num_classes=n_bank*n_attack).float().reshape(-1)).reshape(3,3).detach().numpy())
+                    Q[attack][bank] = np.array(net(torch.tensor([attack_f, bank_f])).reshape(3,3).detach().numpy())
+                    #np.array(net(torch.nn.functional.one_hot(torch.tensor([attack*n_bank+bank]), num_classes=n_bank*n_attack).float().reshape(-1)).reshape(3,3).detach().numpy())
             Q_traj[w] = Q
             w+=1
         '''
@@ -183,16 +185,16 @@ def dql_episode(k, net, optimizer, experience_buffer, loss, params, initial_posi
                 optimizer.step()
             break
         S_t1 = (new_attack_angle, new_bank_angle, k.beta())
-        acc=k.accelerations()
-        S_t1+=acc
-        new_tensor_state=torch.tensor(S_t1[:2]).float()
-        #new_tensor_state[0]-=(n_attack/2)
-        #new_tensor_state[1]-=(n_bank/2)
-        #new_tensor_state[0]/=n_attack
-        #new_tensor_state[1]/=n_bank
-        new_tensor_state=torch.nn.functional.one_hot(torch.tensor([S_t1[0]*n_bank+S_t1[1]]), num_classes=n_bank*n_attack).float().reshape(-1)
-        new_tensor_state=torch.cat([new_tensor_state, torch.tensor(S_t1[2:])])
-        #new_tensor_state[2]/=(np.pi)
+        vrel=k.accelerations()
+        #S_t1+=vrel
+        new_tensor_state=torch.tensor(S_t1[:3]).float()
+        new_tensor_state[0]-=(n_attack/2)
+        new_tensor_state[1]-=(n_bank/2)
+        new_tensor_state[0]/=n_attack
+        new_tensor_state[1]/=n_bank
+        #new_tensor_state=torch.nn.functional.one_hot(torch.tensor([S_t1[0]*n_bank+S_t1[1]]), num_classes=n_bank*n_attack).float().reshape(-1)
+        new_tensor_state=torch.cat([new_tensor_state, torch.tensor(S_t1[3:])])
+        new_tensor_state[2]/=(np.pi)
         R_t1 = k.reward(learning_step)*10
         cumulative_reward+=R_t1
         A_t1=eps_greedy_policy(target_net(new_tensor_state).detach().numpy(), eps)
@@ -218,7 +220,10 @@ def dql_episode(k, net, optimizer, experience_buffer, loss, params, initial_posi
             #torch.nn.utils.clip_grad_norm_(net.parameters(), 1)
             optimizer.step()
         tensor_state=new_tensor_state
-    return i+1, cumulative_reward, experience_buffer, Q_traj, l, w, visits, net
+        if (t-1)%1000==0:
+            w+=1
+            L[w-1]=l
+    return i+1, cumulative_reward, experience_buffer, Q_traj, L, w, visits, net
 
 def reshape_actions(actions):
     oned_actions=torch.zeros(actions.shape[0])
@@ -291,10 +296,10 @@ def sarsa(k, Q, params, initial_position, initial_velocity):
                 Q=terminal_step(Q, S_t, A_t, R_t1, eta)
                 break
             S_t1 = (new_attack_angle, new_bank_angle, k.beta())
-            R_t1 = k.reward(learning_step)
+            R_t1 = k.reward(learning_step)*10
             cumulative_reward+=R_t1
             A_t1=eps_greedy_policy(Q[S_t1], eps)
-            if k.position.r>950 or i==int(horizon)-1:
+            if i==int(horizon)-1:
                 Q=terminal_step(Q, S_t, A_t, R_t1, eta)
                 print(ep, "Simulation ended at learning step: ", i, " reward ", cumulative_reward)
                 rewards.append(cumulative_reward)

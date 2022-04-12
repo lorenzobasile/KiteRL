@@ -48,6 +48,10 @@ extern "C" {
     return k->getbeta();
   }
 
+  vect getvrel(kite* k){
+    return k->getvrel();
+  }
+
   vect getaccelerations(kite* k){
     return k->get_accelerations().second;
   }
