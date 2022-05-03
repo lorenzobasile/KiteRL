@@ -3,7 +3,6 @@ import numpy as np
 import torch
 from copy import deepcopy
 from learning.experiencereplay import ExperienceBuffer
-from time import time
 
 n_attack=pk.coefficients.shape[0]
 n_bank=pk.bank_angles.shape[0]
@@ -55,19 +54,6 @@ def scheduling(value, t, T, exp=0.6):
         return value/((t-T)**exp)
     else:
         return value
-
-def scheduling_c(value, t, T, exp=0.6, ac=1):
-    if t>T:
-        return value*ac/(ac+(t-T)**exp)
-    else:
-        return value
-
-def best_policy(state):
-    if state[0]>=5:
-        return 0,0
-    else:
-        return 2,0
-
 
 def terminal_step(Q, S_t, A_t, R_t1, eta):
     Q[S_t+A_t]=Q[S_t+A_t]+eta*(R_t1-Q[S_t+A_t])
@@ -182,7 +168,6 @@ def compute_loss(loss, batch, net, target_net):
     with torch.no_grad():
         target=r+torch.max(target_net(sprime)).detach()*notfinished
     return loss(target, torch.gather(net(s), 1, a.long().reshape(-1,1)).reshape(-1))
-
 
 def sarsa(k, Q, args, initial_position, initial_velocity):
     t=0
