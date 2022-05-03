@@ -70,10 +70,11 @@ class kite(Structure):
     def evolve_system(self, attack_angle, bank_angle, integration_steps, step):
         self.update_coefficients(attack_angle, bank_angle)
         return libkite.simulate(pointer(self), integration_steps, step)
-    def beta(self):
-        b=np.digitize(libkite.getbeta(pointer(self)), np.linspace(-np.pi/2, np.pi/2, n_beta))
-        #b=libkite.getbeta(pointer(self))
-        return b
+    def beta(self, continuous=False):
+        if continuous:
+            return libkite.getbeta(pointer(self))
+        else:
+            return np.digitize(libkite.getbeta(pointer(self)), np.linspace(-np.pi/2, np.pi/2, n_beta))
     def vrel(self):
         a=libkite.getvrel(pointer(self))
         return a.theta, a.phi, a.r
@@ -88,7 +89,7 @@ class kite(Structure):
         self.C_l, self.C_d = coefficients[attack_angle,0], coefficients[attack_angle,1]
         self.psi = np.deg2rad(bank_angles[bank_angle])
     def fullyunrolled(self):
-        return self.position.r>100
+        return self.position.r>1000000
 
 
 def setup_lib(lib_path):

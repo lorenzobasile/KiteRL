@@ -21,11 +21,11 @@ def main(args):
         Q = np.zeros((n_attack, n_bank, n_beta, 3, 3))
         Q_traj, Q, durations, rewards = sarsa(k, Q, args, initial_position, initial_velocity)
         np.save(path + "best_quality", Q)
+        np.save(path + "quality_traj", Q_traj)
     else:
         net = NN()
-        net, durations, rewards, Q_traj, L = dql(k, net, params, initial_position, initial_velocity)
+        net, durations, rewards= dql(k, net, args, initial_position, initial_velocity)
         torch.save(net.state_dict(), path + "best_weights.h5")
-    np.save(path + "quality_traj", Q_traj)
 
 
     with open(path + "return.txt", "w") as file:
@@ -34,7 +34,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("--path", default="./results/sarsa_const")
+    parser.add_argument("--path", default="./results/sarsa_const/")
     parser.add_argument("--alg", default="sarsa")
     parser.add_argument("--wind", default="const") #const, lin or turbo
     parser.add_argument("--episodes", type=int, default=1e4)
