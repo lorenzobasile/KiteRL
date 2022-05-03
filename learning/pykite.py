@@ -89,7 +89,7 @@ class kite(Structure):
         self.C_l, self.C_d = coefficients[attack_angle,0], coefficients[attack_angle,1]
         self.psi = np.deg2rad(bank_angles[bank_angle])
     def fullyunrolled(self):
-        return self.position.r>1000000
+        return self.position.r>100
 
 
 def setup_lib(lib_path):

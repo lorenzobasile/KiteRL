@@ -35,11 +35,14 @@ def main(args):
         plt.show()
 
         if args.alg=='sarsa':
+            
             Q_traj = np.load(path+"quality_traj.npy")
             Q_traj = Q_traj.reshape(Q_traj.shape[0], -1)
+            stop=np.where(np.max(Q_traj[1:], axis=1)==0)[0][0]
+            print(stop)
             plt.figure(figsize = (15,10))
             for i in range(Q_traj.shape[1]):
-                plt.plot(Q_traj[:,i], '-')
+                plt.plot(Q_traj[:stop,i], '-')
             plt.ylabel("Q(s,a)")
             plt.xlabel("Learning step")
             plt.savefig(path+"quality_traj.png")
@@ -70,7 +73,7 @@ def main(args):
         n_bank=pk.bank_angles.shape[0]
         n_beta=pk.n_beta
 
-        initial_position=pk.vect(np.pi/6, 0, 50)
+        initial_position=pk.vect(np.pi/6, 0, 20)
         initial_velocity=pk.vect(0, 0, 0)
         k=pk.kite(initial_position, initial_velocity, wind_type)
 

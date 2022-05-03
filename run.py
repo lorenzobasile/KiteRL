@@ -14,7 +14,7 @@ def main(args):
     n_bank = pk.bank_angles.shape[0]
     n_beta = pk.n_beta
     window_size = 30
-    initial_position = pk.vect(np.pi / 6, 0, 50)
+    initial_position = pk.vect(np.pi / 6, 0, 20)
     initial_velocity = pk.vect(0, 0, 0)
     k = pk.kite(initial_position, initial_velocity, args.wind)
     if args.alg == 'sarsa':
