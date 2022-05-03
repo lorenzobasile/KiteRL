@@ -104,8 +104,8 @@ protected:
             q_grid[i]=new double[3];
             v_grid[i]=new double[3];
           }
-          read_grid_file("../gdrive/MyDrive/data/q.txt", q_grid);
-          read_grid_file("../gdrive/MyDrive/data/v.txt", v_grid);
+          read_grid_file("../env/q.txt", q_grid);
+          read_grid_file("../env/v.txt", v_grid);
         };
         ~Wind3d_turboframe(){
           for(int i=0; i<n_grid_points; i++){
@@ -314,13 +314,13 @@ class Wind3d_turbo : public Wind3d_turboframe {
             std::string v_dir, v_name, q_path;
             int start_frame;
             try {
-                v_dir = "./v1/";
+                v_dir = "./env/v1/";
                 v_name = "velocities";
                 start_frame = 1000;
-                q_path = "./q.txt";
+                q_path = "./env/q.txt";
                 wind_amplif = 1;
             } catch (std::exception)
-            { throw std::runtime_error( "Invalid parameters of turbolent wind" ); }
+            { throw std::runtime_error( "Invalid parameters of turbulent wind" ); }
 
             read_grid_file(q_path, q_grid);
             read_grid_files(v_dir, v_name, start_frame);
@@ -347,7 +347,9 @@ class Wind3d_turbo : public Wind3d_turboframe {
             #pragma omp parallel for
             #endif
             for (int t=0; t<n_frames; t++) {
+              #ifdef PARALLEL
             	std::cout<<"Process "<<omp_get_thread_num()<<" working on "<<t<<std::endl;
+              #endif
             	//std::cout<<"Working on "<<t<<std::endl;
                 //perc.step(t);
                 std::string path = dir + name + std::to_string(t+start_frame) + ".txt";

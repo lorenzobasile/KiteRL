@@ -118,7 +118,7 @@ public:
     if(W_e==vect{0,0,0} || abs(W_e.dot(e_r)/W_e.dot(e_w)*tan(psi))>1) return std::pair<bool, vect> (false, vect{});
     return std::pair<bool, vect> (true, drag+lift);
   }
-  }
-
 };
+
+
 #endif
