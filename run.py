@@ -18,7 +18,7 @@ def main(args):
     initial_velocity = pk.vect(0, 0, 0)
     k = pk.kite(initial_position, initial_velocity, args.wind)
     if args.alg == 'sarsa':
-        Q = np.ones((n_attack, n_bank, n_beta, 3, 3))
+        Q = np.zeros((n_attack, n_bank, n_beta, 3, 3))
         Q_traj, Q, durations, rewards = sarsa(k, Q, args, initial_position, initial_velocity)
         np.save(path + "best_quality", Q)
     else:
@@ -26,7 +26,6 @@ def main(args):
         net, durations, rewards, Q_traj, L = dql(k, net, params, initial_position, initial_velocity)
         torch.save(net.state_dict(), path + "best_weights.h5")
     np.save(path + "quality_traj", Q_traj)
-    #np.save(path+"loss_traj", L)
 
 
     with open(path + "return.txt", "w") as file:

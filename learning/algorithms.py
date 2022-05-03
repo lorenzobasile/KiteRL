@@ -10,6 +10,10 @@ n_bank=pk.bank_angles.shape[0]
 n_beta=pk.n_beta
 n_states=3
 n_actions=2
+penalty=0.1
+integration_step=0.001
+learning_step=0.2
+
 
 def apply_action(state, action):
     if action==(1,1):
@@ -42,8 +46,8 @@ def eps_greedy_policy(Q_values, eps):
         A_t=(np.random.randint(3), np.random.randint(3))
     return A_t
 
-def step(Q, S_t, A_t, R_t1, S_t1, A_t1, eta, gamma):
-    Q[S_t+A_t]=Q[S_t+A_t]+eta*(R_t1+gamma*Q[S_t1+A_t1]-Q[S_t+A_t])
+def step(Q, S_t, A_t, R_t1, S_t1, A_t1, eta):
+    Q[S_t+A_t]=Q[S_t+A_t]+eta*(R_t1+Q[S_t1+A_t1]-Q[S_t+A_t])
     return Q
 
 def scheduling(value, t, T, exp=0.6):
@@ -249,21 +253,17 @@ def sarsa(k, Q, args, initial_position, initial_velocity):
     durations=[]
     rewards=[]
     eta0=args.lr
-    gamma=1
     eps0=args.eps
     eps_exp=args.epsrate
     eps_start=args.epsstart
     eta_exp=args.lrrate
     eta_start=args.lrstart
     episode_duration=int(args.duration)
-    learning_step=0.2
     horizon=int(episode_duration/learning_step)
-    integration_step=0.001
     integration_steps_per_learning_step=int(learning_step/integration_step)
     wind_type=args.wind
-    penalty=1
     episodes=int(args.episodes)
-    Q_traj = np.zeros((((episodes*episode_duration)//1000+1,)+Q.shape))
+    Q_traj = np.zeros(((int(episodes*episode_duration/learning_step)//1000+1,)+Q.shape))
     for ep in range(episodes):
         cumulative_reward=0
         k.reset(initial_position, initial_velocity, wind_type)
@@ -300,7 +300,7 @@ def sarsa(k, Q, args, initial_position, initial_velocity):
                 durations.append(i+1)
                 break
             else:
-                Q=step(Q, S_t, A_t, R_t1, S_t1, A_t1, eta, gamma)
+                Q=step(Q, S_t, A_t, R_t1, S_t1, A_t1, eta)
             S_t=S_t1
             A_t=A_t1
             if (t-1)%1000 == 0:

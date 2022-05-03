@@ -2,10 +2,49 @@ import numpy as np
 from learning.algorithms import *
 from learning.models import NN
 from argparse import ArgumentParser
+import matplotlib.pyplot as plt
 import sys
+import learning.utils as ut
+
+learning_step=0.2
+integration_step=0.001
+penalty=0.1
 
 def main(args):
     path=args.path
+
+    d_traj, r_traj = ut.read_traj(path+'/return.txt')
+
+    plt.figure(figsize=(10,6))
+    plt.xlabel('Episodes', fontsize=16)
+    plt.ylabel('Smoothed return', fontsize=16)
+    plt.plot(r_traj, 'o')
+    smooth = np.convolve(r_traj, np.ones(100), "valid")/100
+    plt.plot(smooth, color='red', lw=1)
+    plt.savefig(path+'return.png', dpi=200)
+    plt.show()
+
+    plt.figure(figsize=(10,6))
+    plt.xlabel('Episodes', fontsize=16)
+    plt.ylabel('Durations', fontsize=16)
+    plt.plot(d_traj, 'o')
+    smooth = np.convolve(d_traj, np.ones(100), "valid")/100
+    plt.plot(smooth, color='red', lw=1)
+    plt.savefig(path+'durations.png', dpi=200)
+    plt.show()
+
+    Q_traj = np.load(path+"quality_traj.npy")
+    Q_traj = Q_traj.reshape(Q_traj.shape[0], -1)
+    plt.figure(figsize = (15,10))
+    for i in range(Q_traj.shape[1]):
+        plt.plot(Q_traj[:,i], '-')
+    plt.ylabel("Q(s,a)")
+    plt.xlabel("Learning step")
+    plt.savefig(path+"quality_traj.png")
+    plt.show()
+
+
+
     if args.alg=='sarsa':
         Q=np.load(path + "best_quality.npy")
     else:
@@ -20,12 +59,11 @@ def main(args):
     rewards=[]
 
     episode_duration=args.duration
-    learning_step=0.2
+
     horizon=int(episode_duration/learning_step)
-    integration_step=0.001
+
     integration_steps_per_learning_step=int(learning_step/integration_step)
     wind_type=args.wind
-    penalty=1
     episodes=int(args.episodes)
 
     n_attack=pk.coefficients.shape[0]
@@ -89,10 +127,11 @@ def main(args):
                 break
             R_t1 = k.reward(learning_step)
             cumulative_reward+=R_t1
-            if i==int(horizon)-1 or k.position.r>100:
+            if i==int(horizon)-1 or k.fullyunrolled():
                 print(ep, "Simulation ended at learning step: ", i, " reward ", cumulative_reward)
                 rewards.append(cumulative_reward)
                 durations.append(i+1)
+                break
             S_t=S_t1
 
     r = np.array(r)
@@ -115,6 +154,33 @@ def main(args):
     with open(path+"return_eval.txt", "w") as file:
         for i in range(len(durations)):
             file.write(str(durations[i])+"\t"+str(rewards[i])+"\n")
+
+    coordinates = np.load(path+"eval_traj.npy")
+    controls = np.load(path+"contr_traj.npy")
+    print(coordinates[0])
+
+    fig, (ax1, ax2, ax3) = plt.subplots(1,3, figsize=(12,3.5))
+
+    lim = [0,3000]
+
+    ax1.set_xlim(lim)
+    ax1.set_xlabel('Time, seconds', fontsize=14)
+    ax1.set_ylabel('Kite x, meters', fontsize=14)
+    ax1.plot(coordinates[:,0])
+
+    ax2.set_xlim(lim)
+    ax2.set_xlabel('Time, seconds', fontsize=14)
+    ax2.set_ylabel('Kite y, meters', fontsize=14)
+    ax2.plot(coordinates[:,1])
+
+    ax3.set_xlim(lim)
+    ax3.set_xlabel('Time, seconds', fontsize=14)
+    ax3.set_ylabel('Kite z, meters', fontsize=14)
+    ax3.plot(coordinates[:,2])
+
+    plt.tight_layout()
+    plt.savefig(path+"eval_traj.png", dpi=200)
+    plt.show()
 
 if __name__ == "__main__":
     parser = ArgumentParser()
