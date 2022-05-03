@@ -34,17 +34,17 @@ def main(args):
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("--path", default="./results/")
+    parser.add_argument("--path", default="./results/sarsa_const")
     parser.add_argument("--alg", default="sarsa")
     parser.add_argument("--wind", default="const") #const, lin or turbo
     parser.add_argument("--episodes", type=int, default=1e4)
     parser.add_argument("--duration", type=int, default=300)
     parser.add_argument("--lr", type=float, default=1e-2)
     parser.add_argument("--eps", type=float, default=1e-2)
-    parser.add_argument("--lrstart", type=int, default=200000)
-    parser.add_argument("--epsstart", type=int, default=200000)
+    parser.add_argument("--lrstart", type=int, default=1000)
+    parser.add_argument("--epsstart", type=int, default=500000)
     parser.add_argument("--lrrate", type=float, default=0.7)
-    parser.add_argument("--epsrate", type=bool, default=0.7)
+    parser.add_argument("--epsrate", type=bool, default=1.2)
     parser.add_argument("--personalizedlr", type=bool, default=True)
     args = parser.parse_args()
     main(args)

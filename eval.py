@@ -184,7 +184,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("--path", default="./results/")
+    parser.add_argument("--path", default="./results/sarsa_const")
     parser.add_argument("--alg", default="sarsa")
     parser.add_argument("--wind", default="const") #const, lin or turbo
     parser.add_argument("--episodes", type=int, default=1e1)
