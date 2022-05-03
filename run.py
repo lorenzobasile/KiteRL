@@ -36,7 +36,7 @@ else:
     net, durations, rewards, Q_traj, L = dql(k, net, params, initial_position, initial_velocity)
     torch.save(net.state_dict(), path + "best_weights.h5")
 np.save(path + "quality_traj", Q_traj)
-np.save(path+"loss_traj", L)
+#np.save(path+"loss_traj", L)
 
 
 with open(path + "return.txt", "w") as file:

@@ -69,7 +69,7 @@ protected:
         constexpr static double y_size = 100.531*1;
         constexpr static double z_half_size = 50*1;
 
-        const static int n_frames = 1;
+        const static int n_frames = 300;
         const double delta_time = 0.2;
 
         double** q_grid;
@@ -314,7 +314,7 @@ class Wind3d_turbo : public Wind3d_turboframe {
             std::string v_dir, v_name, q_path;
             int start_frame;
             try {
-                v_dir = "./";
+                v_dir = "./v1/";
                 v_name = "velocities";
                 start_frame = 1000;
                 q_path = "./q.txt";
@@ -347,7 +347,9 @@ class Wind3d_turbo : public Wind3d_turboframe {
             #pragma omp parallel for
             #endif
             for (int t=0; t<n_frames; t++) {
-                perc.step(t);
+            	std::cout<<"Process "<<omp_get_thread_num()<<" working on "<<t<<std::endl;
+            	//std::cout<<"Working on "<<t<<std::endl;
+                //perc.step(t);
                 std::string path = dir + name + std::to_string(t+start_frame) + ".txt";
                 std::ifstream file (path);
                 if (!file.is_open())

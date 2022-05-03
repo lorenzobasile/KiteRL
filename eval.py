@@ -55,7 +55,7 @@ bank = []
 beta = []
 
 ep=0
-while ep<=episodes:
+while ep<=10:
     cumulative_reward=0
     ep+=1
     k.reset(initial_position, initial_velocity, wind_type, params)
@@ -101,7 +101,7 @@ while ep<=episodes:
             break
         R_t1 = k.reward(learning_step)
         cumulative_reward+=R_t1
-        if i==int(horizon)-1:
+        if i==int(horizon)-1 or k.position.r>100:
             print(ep, "Simulation ended at learning step: ", i, " reward ", cumulative_reward)
             rewards.append(cumulative_reward)
             durations.append(i+1)

@@ -299,7 +299,7 @@ def sarsa(k, Q, params, initial_position, initial_velocity):
             R_t1 = k.reward(learning_step)*10
             cumulative_reward+=R_t1
             A_t1=eps_greedy_policy(Q[S_t1], eps)
-            if i==int(horizon)-1:
+            if i==int(horizon)-1 or k.position.r>100:
                 Q=terminal_step(Q, S_t, A_t, R_t1, eta)
                 print(ep, "Simulation ended at learning step: ", i, " reward ", cumulative_reward)
                 rewards.append(cumulative_reward)
