@@ -2,6 +2,16 @@
 
 This repository contains the code used to control by means of model-free Reinforcement Learning an airborne wind energy system used for electric energy production. The physical model is based on the "yo-yo configuration" proposed by [Canale et al., 2009](https://ieeexplore.ieee.org/abstract/document/5152910).
 
+First of all, the `C++` environment `libkite.so` has to be compiled, by executing the command:
+
+```makefile
+make x86 #to compile on standard x86 systems
+
+make m1 #to compile on Apple silicon macs
+
+make parallel #to enable parallel loading of turbulent flow data (on x86 only)
+```
+
 Learning can be performed by running the command:
 
 ```
