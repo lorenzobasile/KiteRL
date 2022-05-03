@@ -42,7 +42,7 @@ class kite(Structure):
         ('psi', c_double),
         ('time', c_double)
     ]
-    def __init__(self, initial_pos, initial_vel, wind_type, params):
+    def __init__(self, initial_pos, initial_vel, wind_type):
         self.position=initial_pos
         self.velocity=initial_vel
         self.C_l=0.35
@@ -52,25 +52,23 @@ class kite(Structure):
         if wind_type=='turbo':
             libkite.init_turbo_wind(pointer(self))
         if wind_type=='lin':
-            libkite.init_lin_wind(pointer(self), params['v_ground'], params['v_ang_coef'])
+            libkite.init_lin_wind(pointer(self), 5, 0.125)
         if wind_type=='const':
-            libkite.init_const_wind(pointer(self), params['v_wind_x'])
-    def reset(self, initial_pos, initial_vel, wind_type, params):
+            libkite.init_const_wind(pointer(self), 10)
+    def reset(self, initial_pos, initial_vel, wind_type):
         self.position=initial_pos
         self.velocity=initial_vel
         self.time=0
         if wind_type=='turbo':
             libkite.reset_turbo_wind(pointer(self))
         if wind_type=='lin':
-            libkite.init_lin_wind(pointer(self), params['v_ground'], params['v_ang_coef'])
+            libkite.init_lin_wind(pointer(self), 5, 0.125)
     def __str__(self):
         return "Position: "+str(self.position.theta)+","+str(self.position.phi)+","+str(self.position.r)+", Velocity"+ str(self.velocity.theta)+","+str(self.velocity.phi)+","+str(self.velocity.r)
     def simulate(self, step):
         return libkite.simulation_step(pointer(self), step)
     def evolve_system(self, attack_angle, bank_angle, integration_steps, step):
         self.update_coefficients(attack_angle, bank_angle)
-        #C_l, self.C_d = coefficients[attack_angle,0], coefficients[attack_angle,1]
-        #self.psi = np.deg2rad(bank_angles[bank_angle])
         return libkite.simulate(pointer(self), integration_steps, step)
     def beta(self):
         b=np.digitize(libkite.getbeta(pointer(self)), np.linspace(-np.pi/2, np.pi/2, n_beta))
@@ -89,6 +87,8 @@ class kite(Structure):
     def update_coefficients(self, attack_angle, bank_angle):
         self.C_l, self.C_d = coefficients[attack_angle,0], coefficients[attack_angle,1]
         self.psi = np.deg2rad(bank_angles[bank_angle])
+    def fullyunrolled(self):
+        return self.position.r>100
 
 
 def setup_lib(lib_path):

@@ -6,9 +6,6 @@
 #define dl 0.0
 #define rhol 970.0
 #define g 9.81
-//#define slope 0.125
-
-//#define d 3.0
 #define A 10.0
 #define rho 1.2
 

@@ -242,40 +242,31 @@ def compute_loss(loss, batch, net, target_net):
     return loss(target, torch.gather(net(s), 1, a.long().reshape(-1,1)).reshape(-1))
 
 
-def sarsa(k, Q, params, initial_position, initial_velocity):
+def sarsa(k, Q, args, initial_position, initial_velocity):
     t=0
     w=0
     visits=np.zeros_like(Q, dtype='int')
     durations=[]
     rewards=[]
-    eta0=params['eta0']
-    gamma=params['gamma']
-    eps0=params['eps0']
-    eps_exp=params['eps_decay_rate']
-    eps_start=params['eps_decay_start']
-    eps_c=params['eps_c']
-    eta_exp=params['eta_decay_rate']
-    eta_start=params['eta_decay_start']
-    eta_c=params['eta_c']
-    episode_duration=params['episode_duration']
-    learning_step=params['learning_step']
+    eta0=args.lr
+    gamma=1
+    eps0=args.eps
+    eps_exp=args.epsrate
+    eps_start=args.epsstart
+    eta_exp=args.lrrate
+    eta_start=args.lrstart
+    episode_duration=int(args.duration)
+    learning_step=0.2
     horizon=int(episode_duration/learning_step)
-    integration_step=params['integration_step']
+    integration_step=0.001
     integration_steps_per_learning_step=int(learning_step/integration_step)
-    wind_type=params['wind_type']
-    penalty=params['penalty']
-    if 'episodes' in params:
-        episodes=int(params['episodes'])
-        max_steps=int(params['episodes']*params['episode_duration']/params['learning_step'])
-    else:
-        max_steps=int(params['max_steps'])
-    Q_traj = np.zeros(((max_steps//1000+1,)+Q.shape))
-    ep=0
-    while ep<=episodes if 'episodes' in params else t<max_steps:
-    #for j in range(episodes):
+    wind_type=args.wind
+    penalty=1
+    episodes=int(args.episodes)
+    Q_traj = np.zeros((((episodes*episode_duration)//1000+1,)+Q.shape))
+    for ep in range(episodes):
         cumulative_reward=0
-        ep+=1
-        k.reset(initial_position, initial_velocity, wind_type, params)
+        k.reset(initial_position, initial_velocity, wind_type)
         initial_beta=k.beta()
         S_t=(np.random.randint(0,n_attack), np.random.randint(0,n_bank), initial_beta)
         k.update_coefficients(S_t[0], S_t[1])
@@ -283,8 +274,11 @@ def sarsa(k, Q, params, initial_position, initial_velocity):
         for i in range(horizon):
             visits[S_t+A_t]+=1
             t+=1
-            eps=scheduling_c(eps0, t, eps_start, exp=eps_exp, ac=eps_c)
-            eta=scheduling_c(eta0, visits[S_t+A_t], eta_start, exp=eta_exp, ac=eta_c)
+            eps=scheduling(eps0, t, eps_start, exp=eps_exp)
+            if args.personalizedlr:
+                eta=scheduling(eta0, visits[S_t+A_t], eta_start, exp=eta_exp)
+            else:
+                eta=scheduling(eta0, t, eta_start, exp=eta_exp)
             new_attack_angle, new_bank_angle=apply_action(S_t, A_t)
             sim_status=k.evolve_system(new_attack_angle, new_bank_angle, integration_steps_per_learning_step, integration_step)
             if not sim_status==0:
@@ -296,10 +290,10 @@ def sarsa(k, Q, params, initial_position, initial_velocity):
                 Q=terminal_step(Q, S_t, A_t, R_t1, eta)
                 break
             S_t1 = (new_attack_angle, new_bank_angle, k.beta())
-            R_t1 = k.reward(learning_step)*10
+            R_t1 = k.reward(learning_step)
             cumulative_reward+=R_t1
             A_t1=eps_greedy_policy(Q[S_t1], eps)
-            if i==int(horizon)-1 or k.position.r>100:
+            if i==int(horizon)-1 or k.fullyunrolled():
                 Q=terminal_step(Q, S_t, A_t, R_t1, eta)
                 print(ep, "Simulation ended at learning step: ", i, " reward ", cumulative_reward)
                 rewards.append(cumulative_reward)
