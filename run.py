@@ -1,6 +1,7 @@
 import numpy as np
 from learning.algorithms import *
 from learning.models import NN
+from learning.eval import eval
 from argparse import ArgumentParser
 import sys
 import os
@@ -31,6 +32,7 @@ def main(args):
     with open(path + "return.txt", "w") as file:
         for i in range(len(durations)):
             file.write(str(durations[i]) + "\t" + str(rewards[i]) + "\n")
+    eval(args)
 
 if __name__ == "__main__":
     parser = ArgumentParser()
@@ -38,6 +40,7 @@ if __name__ == "__main__":
     parser.add_argument("--alg", default="sarsa")
     parser.add_argument("--wind", default="const") #const, lin or turbo
     parser.add_argument("--episodes", type=int, default=1e4)
+    parser.add_argument("--eval_episodes", type=int, default=1e1)
     parser.add_argument("--duration", type=int, default=300)
     parser.add_argument("--lr", type=float, default=1e-2)
     parser.add_argument("--eps", type=float, default=1e-2)

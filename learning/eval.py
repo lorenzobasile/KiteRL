@@ -10,7 +10,7 @@ learning_step=0.2
 integration_step=0.001
 penalty=0.1
 
-def main(args):
+def eval(args):
     with torch.no_grad():
         path=args.path
 
@@ -35,7 +35,7 @@ def main(args):
         plt.show()
 
         if args.alg=='sarsa':
-            
+
             Q_traj = np.load(path+"quality_traj.npy")
             Q_traj = Q_traj.reshape(Q_traj.shape[0], -1)
             stop=np.where(np.max(Q_traj[1:], axis=1)==0)[0][0]
@@ -67,7 +67,7 @@ def main(args):
 
         integration_steps_per_learning_step=int(learning_step/integration_step)
         wind_type=args.wind
-        episodes=int(args.episodes)
+        episodes=int(args.eval_episodes)
 
         n_attack=pk.coefficients.shape[0]
         n_bank=pk.bank_angles.shape[0]
@@ -183,13 +183,3 @@ def main(args):
         plt.tight_layout()
         plt.savefig(path+"eval_traj.png", dpi=200)
         plt.show()
-
-if __name__ == "__main__":
-    parser = ArgumentParser()
-    parser.add_argument("--path", default="./results/sarsa_const/")
-    parser.add_argument("--alg", default="sarsa")
-    parser.add_argument("--wind", default="const") #const, lin or turbo
-    parser.add_argument("--episodes", type=int, default=1e1)
-    parser.add_argument("--duration", type=int, default=300)
-    args = parser.parse_args()
-    main(args)
