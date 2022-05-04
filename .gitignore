@@ -57,3 +57,7 @@ videos/
 results/
 
 *.pdf
+
+v1/
+
+*.sh*

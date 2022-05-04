@@ -52,7 +52,7 @@ class kite(Structure):
         if wind_type=='turbo':
             libkite.init_turbo_wind(pointer(self))
         if wind_type=='lin':
-            libkite.init_lin_wind(pointer(self), 5, 0.125)
+            libkite.init_lin_wind(pointer(self), 5, 0.250)
         if wind_type=='const':
             libkite.init_const_wind(pointer(self), 10)
     def reset(self, initial_pos, initial_vel, wind_type):
@@ -62,7 +62,7 @@ class kite(Structure):
         if wind_type=='turbo':
             libkite.reset_turbo_wind(pointer(self))
         if wind_type=='lin':
-            libkite.init_lin_wind(pointer(self), 5, 0.125)
+            libkite.init_lin_wind(pointer(self), 5, 0.250)
     def __str__(self):
         return "Position: "+str(self.position.theta)+","+str(self.position.phi)+","+str(self.position.r)+", Velocity"+ str(self.velocity.theta)+","+str(self.velocity.phi)+","+str(self.velocity.r)
     def simulate(self, step):

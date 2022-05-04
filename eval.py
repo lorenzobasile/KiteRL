@@ -163,7 +163,7 @@ def main(args):
 
         fig, (ax1, ax2, ax3) = plt.subplots(1,3, figsize=(12,3.5))
 
-        lim = [0,3000]
+        lim = [0,1000]
 
         ax1.set_xlim(lim)
         ax1.set_xlabel('Time, seconds', fontsize=14)
