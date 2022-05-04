@@ -15,7 +15,7 @@ def main(args):
     n_bank = pk.bank_angles.shape[0]
     n_beta = pk.n_beta
     window_size = 30
-    initial_position = pk.vect(np.pi / 6, 0, 20)
+    initial_position = pk.vect(np.pi/6, 0, 15)
     initial_velocity = pk.vect(0, 0, 0)
     k = pk.kite(initial_position, initial_velocity, args.wind)
     if args.alg == 'sarsa':
@@ -32,7 +32,7 @@ def main(args):
     with open(path + "return.txt", "w") as file:
         for i in range(len(durations)):
             file.write(str(durations[i]) + "\t" + str(rewards[i]) + "\n")
-    eval(args)
+    eval(args, k)
 
 if __name__ == "__main__":
     parser = ArgumentParser()
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     parser.add_argument("--eps", type=float, default=1e-2)
     parser.add_argument("--lrstart", type=int, default=1000)
     parser.add_argument("--epsstart", type=int, default=500000)
-    parser.add_argument("--lrrate", type=float, default=0.7)
+    parser.add_argument("--lrrate", type=float, default=0.6)
     parser.add_argument("--epsrate", type=bool, default=1.2)
     parser.add_argument("--personalizedlr", type=bool, default=True)
     args = parser.parse_args()

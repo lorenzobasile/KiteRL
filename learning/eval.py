@@ -10,18 +10,28 @@ learning_step=0.2
 integration_step=0.001
 penalty=0.1
 
-def eval(args):
+def eval(args, k):
     with torch.no_grad():
         path=args.path
 
         d_traj, r_traj = ut.read_traj(path+'/return.txt')
-
+        '''
+        lr=np.ones_like(r_traj)
+        eps=np.ones_like(r_traj)
+        for i in range(len(r_traj)):
+            nsteps=np.sum(d_traj[:i])
+            lr[i]=scheduling(args.lr, nsteps, args.lrstart, args.lrrate)
+            eps[i]=scheduling(args.eps, nsteps, args.epsstart, args.epsrate)
+        '''
         plt.figure(figsize=(10,6))
         plt.xlabel('Episodes', fontsize=16)
         plt.ylabel('Smoothed return', fontsize=16)
         plt.plot(r_traj, 'o')
+        #plt.plot(lr, label='lr')
+        #plt.plot(eps, label='eps')
         smooth = np.convolve(r_traj, np.ones(100), "valid")/100
         plt.plot(smooth, color='red', lw=1)
+        #plt.legend()
         plt.savefig(path+'return.png', dpi=200)
         plt.show()
 
@@ -73,9 +83,9 @@ def eval(args):
         n_bank=pk.bank_angles.shape[0]
         n_beta=pk.n_beta
 
-        initial_position=pk.vect(np.pi/6, 0, 20)
+        initial_position=pk.vect(np.pi/6, 0, 15)
         initial_velocity=pk.vect(0, 0, 0)
-        k=pk.kite(initial_position, initial_velocity, wind_type)
+        #k=pk.kite(initial_position, initial_velocity, wind_type)
 
         r = []
         theta = []

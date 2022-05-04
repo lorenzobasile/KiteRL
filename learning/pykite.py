@@ -31,6 +31,8 @@ class vect(Structure):
         self.theta=t
         self.phi=p
         self.r=r
+    def __str__(self):
+        return "("+str(self.theta)+", "+str(self.phi)+", "+str(self.r)+")"
 
 class kite(Structure):
     _fields_ = [
@@ -75,6 +77,12 @@ class kite(Structure):
             return libkite.getbeta(pointer(self))
         else:
             return np.digitize(libkite.getbeta(pointer(self)), np.linspace(-np.pi/2, np.pi/2, n_beta))
+    def alt(self, continuous=False):
+        altitude=self.position.r*np.cos(self.position.theta)
+        if continuous:
+            return altitude
+        else:
+            return np.digitize(altitude, np.linspace(0, 100, n_alt))
     def vrel(self):
         a=libkite.getvrel(pointer(self))
         return a.theta, a.phi, a.r
