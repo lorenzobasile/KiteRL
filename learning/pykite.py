@@ -76,7 +76,7 @@ class kite(Structure):
         if continuous:
             return libkite.getbeta(pointer(self))
         else:
-            return np.digitize(libkite.getbeta(pointer(self)), np.linspace(-np.pi/2, np.pi/2, n_beta))
+            return max(min(np.digitize(libkite.getbeta(pointer(self)), np.linspace(-np.pi/2, np.pi/2, n_beta+1))-1, n_beta-1), 0)
     def alt(self, continuous=False):
         altitude=self.position.r*np.cos(self.position.theta)
         if continuous:
@@ -90,9 +90,7 @@ class kite(Structure):
         a=libkite.getaccelerations(pointer(self))
         return a.theta, a.phi, a.r
     def reward(self, learning_step):
-        if self.position.r*np.cos(self.position.theta)<10:
-            return libkite.getreward(pointer(self))*learning_step/2
-        return libkite.getreward(pointer(self))*learning_step
+        return libkite.getreward(pointer(self))*learning_step*self.alt(True)/30
     def update_coefficients(self, attack_angle, bank_angle):
         self.C_l, self.C_d = coefficients[attack_angle,0], coefficients[attack_angle,1]
         self.psi = np.deg2rad(bank_angles[bank_angle])

@@ -229,5 +229,4 @@ def sarsa(k, Q, args, initial_position, initial_velocity):
             if (t-1)%1000 == 0:
                 Q_traj[w] = Q
                 w+=1
-
     return Q_traj, Q, durations, rewards
