@@ -191,7 +191,7 @@ def sarsa(k, Q, args, initial_position, initial_velocity):
         cumulative_reward=0
         k.reset(initial_position, initial_velocity, wind_type)
         initial_beta=k.beta()
-        S_t=(np.random.randint(3,n_attack), np.random.randint(0,n_bank), initial_beta)
+        S_t=(np.random.randint(0,n_attack), np.random.randint(0,n_bank), initial_beta)
         initial_state=S_t
         k.update_coefficients(S_t[0], S_t[1])
         A_t=eps_greedy_policy(Q[S_t], eps0)

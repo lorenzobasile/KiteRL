@@ -8,6 +8,7 @@ import os
 
 
 def main(args):
+    np.random.seed(0)
     path=args.path
     if not os.path.exists(path):
         os.makedirs(path)
