@@ -90,12 +90,12 @@ class kite(Structure):
         a=libkite.getaccelerations(pointer(self))
         return a.theta, a.phi, a.r
     def reward(self, learning_step):
-        return libkite.getreward(pointer(self))*learning_step*self.alt(True)/30
+        return libkite.getreward(pointer(self))*learning_step
     def update_coefficients(self, attack_angle, bank_angle):
         self.C_l, self.C_d = coefficients[attack_angle,0], coefficients[attack_angle,1]
         self.psi = np.deg2rad(bank_angles[bank_angle])
     def fullyunrolled(self):
-        return self.position.r>100
+        return self.position.r>200
 
 
 def setup_lib(lib_path):

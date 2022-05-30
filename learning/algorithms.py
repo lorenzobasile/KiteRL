@@ -186,12 +186,13 @@ def sarsa(k, Q, args, initial_position, initial_velocity):
     integration_steps_per_learning_step=int(learning_step/integration_step)
     wind_type=args.wind
     episodes=int(args.episodes)
-    Q_traj = np.zeros(((int(episodes*episode_duration/learning_step)//1000+1,)+Q.shape))
+    Q_traj = np.zeros(((int(episodes*episode_duration/learning_step)//10000+1,)+Q.shape))
     for ep in range(episodes):
         cumulative_reward=0
         k.reset(initial_position, initial_velocity, wind_type)
         initial_beta=k.beta()
-        S_t=(np.random.randint(0,n_attack), np.random.randint(0,n_bank), initial_beta)
+        S_t=(np.random.randint(3,n_attack), np.random.randint(0,n_bank), initial_beta)
+        initial_state=S_t
         k.update_coefficients(S_t[0], S_t[1])
         A_t=eps_greedy_policy(Q[S_t], eps0)
         for i in range(horizon):
@@ -208,6 +209,7 @@ def sarsa(k, Q, args, initial_position, initial_velocity):
                 R_t1 = scheduling(-penalty, i, horizon)
                 cumulative_reward+=R_t1
                 print(ep, "Simulation failed at learning step: ", i, " reward ", cumulative_reward)
+                print("Initial state: ", initial_state)
                 rewards.append(cumulative_reward)
                 durations.append(i+1)
                 Q=terminal_step(Q, S_t, A_t, R_t1, eta)
@@ -226,7 +228,7 @@ def sarsa(k, Q, args, initial_position, initial_velocity):
                 Q=step(Q, S_t, A_t, R_t1, S_t1, A_t1, eta)
             S_t=S_t1
             A_t=A_t1
-            if (t-1)%1000 == 0:
+            if (t-1)%10000 == 0:
                 Q_traj[w] = Q
                 w+=1
     return Q_traj, Q, durations, rewards
