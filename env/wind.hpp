@@ -65,9 +65,9 @@ protected:
         //const static int n_x_axis_points = 71;
         //const static int n_y_axis_points = 71;
         //const static int n_z_axis_points = 99;
-        constexpr static double x_size = 100.531*2;
-        constexpr static double y_size = 100.531*2;
-        constexpr static double z_half_size = 50*2;
+        constexpr static double x_size = 100.531*1;
+        constexpr static double y_size = 100.531*1;
+        constexpr static double z_half_size = 50*1;
 
         const static int n_frames = 500;
         const double delta_time = 0.2;
@@ -83,7 +83,7 @@ protected:
         void read_grid_file(std::string path, double** grid_data){
             std::ifstream file;
             file.open(path);
-            int factor=2;
+            int factor=1;
 
             std::string line;
             vecd l = vecd(3);
@@ -362,9 +362,9 @@ class Wind3d_turbo : public Wind3d_turboframe {
                 int count = 0;
                 while ( getline (file, line) ){
                    l = str2vecd(line, " ", false);
-                   vt_grid[t][count][0] = 2*l[0];
-                   vt_grid[t][count][1] = 2*l[2];
-                   vt_grid[t][count][2] = 2*l[1];
+                   vt_grid[t][count][0] = 1*l[0];
+                   vt_grid[t][count][1] = 1*l[2];
+                   vt_grid[t][count][2] = 1*l[1];
                    count++;
                 }
                 file.close();
