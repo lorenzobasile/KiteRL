@@ -54,7 +54,6 @@ data/
 
 videos/
 
-results/*/*.txt
 results/*/*.npy
 
 results/*.txt
