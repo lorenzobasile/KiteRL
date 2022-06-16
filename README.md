@@ -50,7 +50,7 @@ Example of a kite trajectory in the turbulent Couette flow:
 python run.py --alg=sarsa --wind=turbo --episodes=50000 --eval_episodes=1000  --lr=0.1 --lrstart=1000000 --epsstart=1200000 --path=./results/turbo/
 ```
 
-![](/Users/lorenzo/Desktop/kitegen/results/turbo/animation.gif)
+![](./results/turbo/animation.gif)
 
 
 
