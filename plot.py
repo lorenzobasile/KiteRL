@@ -1,9 +1,6 @@
 import numpy as np
 from learning.algorithms import *
-from learning.models import NN
-from learning.eval import eval
 from argparse import ArgumentParser
-import sys
 import os
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D

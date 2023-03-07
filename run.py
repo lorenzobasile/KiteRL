@@ -8,6 +8,7 @@ import os
 
 
 def main(args):
+    
     np.random.seed(0)
     path=args.path
     if not os.path.exists(path):
@@ -19,7 +20,7 @@ def main(args):
     initial_position = pk.vect(np.pi/6, 0, 20)
     initial_velocity = pk.vect(0, 0, 0)
     k = pk.kite(initial_position, initial_velocity, args.wind)
-    '''
+    
     if args.alg == 'sarsa':
         Q = np.ones((n_attack, n_bank, n_beta, 3, 3))*0
         Q_traj, Q, durations, rewards = sarsa(k, Q, args, initial_position, initial_velocity)
@@ -34,8 +35,8 @@ def main(args):
     with open(path + "return.txt", "w") as file:
         for i in range(len(durations)):
             file.write(str(durations[i]) + "\t" + str(rewards[i]) + "\n")
-    '''
-    eval(args, k)
+    
+    eval(args, k.reset(initial_position, initial_velocity, args.wind))
 
 if __name__ == "__main__":
     parser = ArgumentParser()

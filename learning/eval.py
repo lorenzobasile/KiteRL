@@ -1,9 +1,7 @@
 import numpy as np
 from learning.algorithms import *
 from learning.models import NN
-from argparse import ArgumentParser
 import matplotlib.pyplot as plt
-import sys
 import learning.utils as ut
 
 learning_step=0.2
@@ -24,8 +22,9 @@ def eval(args, k):
             eps[i]=scheduling(args.eps, nsteps, args.epsstart, args.epsrate)
         '''
         plt.figure(figsize=(10,6))
+        plt.title("Cumulative reward")
         plt.xlabel('Episodes', fontsize=16)
-        plt.ylabel('Smoothed return', fontsize=16)
+        plt.ylabel('kWh', fontsize=16)
         plt.plot(r_traj, 'o')
         #plt.plot(lr, label='lr')
         #plt.plot(eps, label='eps')
@@ -35,6 +34,7 @@ def eval(args, k):
         plt.savefig(path+'return.png', dpi=200)
         plt.show()
 
+        
         plt.figure(figsize=(10,6))
         plt.xlabel('Episodes', fontsize=16)
         plt.ylabel('Durations', fontsize=16)
@@ -97,7 +97,7 @@ def eval(args, k):
         ep=0
         for ep in range(episodes):
             cumulative_reward=0
-            initial_position=pk.vect(np.pi/6+np.random.normal(0,0.04), 0, 20+np.random.normal(0,1))
+            #initial_position=pk.vect(np.pi/6+np.random.normal(0,0.04), 0, 20+np.random.normal(0,1))
             k.reset(initial_position, initial_velocity, wind_type)
             initial_beta=k.beta(continuous=(args.alg=='dql'))
             S_t=(np.random.randint(0,n_attack), np.random.randint(0,n_bank), initial_beta)
@@ -159,17 +159,21 @@ def eval(args, k):
         z=np.multiply(r, np.cos(theta))
 
         coordinates = np.stack([x,y,z],axis=1)
-        np.save(path + "eval_traj_rand", coordinates)
+        np.save(path + "eval_traj", coordinates)
 
         controls = np.stack([alpha,bank,beta],axis=1)
-        np.save(path + "contr_traj_rand", controls)
+        np.save(path + "contr_traj", controls)
 
-        with open(path+"return_eval_rand.txt", "w") as file:
+        with open(path+"return_eval.txt", "w") as file:
             for i in range(len(durations)):
                 file.write(str(durations[i])+"\t"+str(rewards[i])+"\n")
+        durations=np.array(durations)
+        rewards=np.array(rewards)
+        with open(path+"return_eval.txt", "a+") as file:
+            file.write("Means: ", str(np.mean(durations))+"\t"+str(np.mean(rewards))+"\n")
 
-        coordinates = np.load(path+"eval_traj_rand.npy")
-        controls = np.load(path+"contr_traj_rand.npy")
+        coordinates = np.load(path+"eval_traj.npy")
+        controls = np.load(path+"contr_traj.npy")
         print(coordinates[0])
 
         fig, (ax1, ax2, ax3) = plt.subplots(1,3, figsize=(12,3.5))
@@ -192,5 +196,6 @@ def eval(args, k):
         ax3.plot(coordinates[:,2])
 
         plt.tight_layout()
-        plt.savefig(path+"eval_traj_rand.png", dpi=200)
+        plt.savefig(path+"eval_traj.png", dpi=200)
         plt.show()
+        
