@@ -3,6 +3,7 @@ from learning.algorithms import *
 from learning.models import NN
 from learning.eval import eval
 from argparse import ArgumentParser
+from td3_main import td3
 import sys
 import os
 
@@ -26,6 +27,10 @@ def main(args):
         Q_traj, Q, durations, rewards = sarsa(k, Q, args, initial_position, initial_velocity)
         np.save(path + "best_quality", Q)
         np.save(path + "quality_traj", Q_traj)
+        
+    elif args.alg == 'td3': 
+        td3(args) 
+        
     else:
         net = NN()
         net, durations, rewards= dql(k, net, args, initial_position, initial_velocity)
@@ -43,6 +48,9 @@ if __name__ == "__main__":
     parser.add_argument("--path", default="./results/const/")
     parser.add_argument("--alg", default="sarsa")
     parser.add_argument("--wind", default="const") #const, lin or turbo
+    parser.add_argument('--step',type=float,default=0.1)
+    parser.add_argument('--critic_lr',type = float, default = 0.001) 
+    parser.add_argument('--actor_lr',type = float, default = 0.001) 
     parser.add_argument("--episodes", type=int, default=1e4)
     parser.add_argument("--eval_episodes", type=int, default=1e1)
     parser.add_argument("--duration", type=int, default=300)
@@ -53,5 +61,13 @@ if __name__ == "__main__":
     parser.add_argument("--lrrate", type=float, default=0.8)
     parser.add_argument("--epsrate", type=bool, default=0.8)
     parser.add_argument("--personalizedlr", type=bool, default=True)
+    parser.add_argument('--range_actions',action='append',default = None) 
     args = parser.parse_args()
     main(args)
+    
+    
+    
+    
+    
+    
+

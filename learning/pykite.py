@@ -72,12 +72,14 @@ class kite(Structure):
     def evolve_system(self, attack_angle, bank_angle, integration_steps, step):
         self.update_coefficients(attack_angle, bank_angle)
         return libkite.simulate(pointer(self), integration_steps, step)
-    def beta(self, continuous=False):
+    def evolve_system_2(self,integration_steps, step):
+        return libkite.simulate(pointer(self), integration_steps, step)
+    def beta(self, continuous=True):
         if continuous:
             return libkite.getbeta(pointer(self))
         else:
             return max(min(np.digitize(libkite.getbeta(pointer(self)), np.linspace(-np.pi/2, np.pi/2, n_beta+1))-1, n_beta-1), 0)
-    def alt(self, continuous=False):
+    def alt(self, continuous=True):
         altitude=self.position.r*np.cos(self.position.theta)
         if continuous:
             return altitude
@@ -94,8 +96,14 @@ class kite(Structure):
     def update_coefficients(self, attack_angle, bank_angle):
         self.C_l, self.C_d = coefficients[attack_angle,0], coefficients[attack_angle,1]
         self.psi = np.deg2rad(bank_angles[bank_angle])
+    def update_coefficients_cont(self, c_l,c_d, bank_angle):
+        self.C_l, self.C_d = c_l, c_d
+        self.psi = np.deg2rad(bank_angle)#[bank_angle])
     def fullyunrolled(self):
         return self.position.r>100
+    def effective_wind_speed(self): 
+        return libkite.get_effective_wind_speed(pointer(self))
+
 
 
 def setup_lib(lib_path):
@@ -114,6 +122,8 @@ def setup_lib(lib_path):
     lib.getaccelerations.restype=vect
     lib.getreward.argtypes = [POINTER(kite)]
     lib.getreward.restype=c_double
+    lib.get_effective_wind_speed.argtypes = [POINTER(kite)] 
+    lib.get_effective_wind_speed.restype=c_double
     return lib
 
 libkite=setup_lib("./libkite.so")
