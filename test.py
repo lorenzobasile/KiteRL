@@ -2,11 +2,11 @@ import os
 import argparse
 import numpy as np
 import learning.pykite as pk 
-from utility import *
+from learning.utils import *
 import pandas as pd 
 import scipy.interpolate as interpolate
 import matplotlib.pyplot as plt 
-from classes_ import *
+from learning.models import *
 
 ACTION_NOISE = 0.2
 ATTACK_INF_LIM = -5 
@@ -34,13 +34,13 @@ def test(args):
         range_actions = np.array([1,1]) 
         
         
-    Cl_angles = read_file('CL_angle.txt') 
+    Cl_angles = read_file('env/coefficients/CL_angle.txt') 
     
-    Cl_values = read_file('CL_value.txt') 
+    Cl_values = read_file('env/coefficients/CL_value.txt') 
     
-    Cd_angles = read_file('CD_angle.txt') 
+    Cd_angles = read_file('env/coefficients/CD_angle.txt') 
     
-    Cd_values = read_file('CD_value.txt') 
+    Cd_values = read_file('env/coefficients/CD_value.txt') 
     
     Cl_data = pd.DataFrame({'cl_angles':Cl_angles,'cl_values':Cl_values}) 
     

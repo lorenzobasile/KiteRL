@@ -56,7 +56,12 @@ videos/
 
 results/*/*.npy
 
-results/*.txt
+results/*/*.txt
+
+results/*/data
+results/*/test
+results/*/nets
+
 
 *.pdf
 

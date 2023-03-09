@@ -3,9 +3,9 @@ from learning.algorithms import *
 from learning.models import NN
 from learning.eval import eval
 from argparse import ArgumentParser
-from td3_main import td3
 import sys
 import os
+from test import test 
 
 
 def main(args):
@@ -29,11 +29,12 @@ def main(args):
         np.save(path + "quality_traj", Q_traj)
         
     elif args.alg == 'td3': 
-        td3(args) 
+        durations, rewards = td3(k, args, initial_position, initial_velocity) 
+        test(args)
         
     else:
         net = NN()
-        net, durations, rewards= dql(k, net, args, initial_position, initial_velocity)
+        net, durations, rewards = dql(k, net, args, initial_position, initial_velocity)
         torch.save(net.state_dict(), path + "best_weights.h5")
 
 
