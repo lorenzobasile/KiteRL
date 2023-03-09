@@ -170,6 +170,6 @@ def main(args):
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("--path", default="./results/sarsa_const/")
+    parser.add_argument("--path", default="./results/const/")
     args = parser.parse_args()
     main(args)

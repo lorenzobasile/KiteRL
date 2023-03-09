@@ -169,9 +169,6 @@ def eval(args, k):
                 file.write(str(durations[i])+"\t"+str(rewards[i])+"\n")
         durations=np.array(durations)
         rewards=np.array(rewards)
-        with open(path+"return_eval.txt", "a+") as file:
-            file.write("Means: ", str(np.mean(durations))+"\t"+str(np.mean(rewards))+"\n")
-
         coordinates = np.load(path+"eval_traj.npy")
         controls = np.load(path+"contr_traj.npy")
         print(coordinates[0])
@@ -198,4 +195,3 @@ def eval(args, k):
         plt.tight_layout()
         plt.savefig(path+"eval_traj.png", dpi=200)
         plt.show()
-        
