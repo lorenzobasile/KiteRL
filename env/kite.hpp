@@ -118,6 +118,19 @@ public:
     if(W_e==vect{0,0,0} || abs(W_e.dot(e_r)/W_e.dot(e_w)*tan(psi))>1) return std::pair<bool, vect> (false, vect{});
     return std::pair<bool, vect> (true, drag+lift);
   }
+   double effective_wind_speed() const{
+    auto w=wind->to_vect();
+    vect W_l{
+      w.x()*cos(position.theta)*cos(position.phi)+w.y()*cos(position.theta)*sin(position.phi)-w.z()*sin(position.theta),
+      -w.x()*sin(position.phi)+w.y()*cos(position.phi),
+      w.x()*sin(position.theta)*cos(position.phi)+w.y()*sin(position.theta)*sin(position.phi)+w.z()*cos(position.theta)
+    };
+    vect W_a{velocity.theta*position.r, velocity.phi*position.r*sin(position.theta), velocity.r};
+    vect W_e=W_l-W_a;
+    return W_e.norm();
+    }
+  
+  
 };
 
 

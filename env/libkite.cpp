@@ -60,5 +60,10 @@ extern "C" {
   double getreward(kite* k){
     return (k->compute_power())/3600000;
   }
+  
+  double get_effective_wind_speed(kite* k){
+    return k->effective_wind_speed();
+    
+  }
 
 }
