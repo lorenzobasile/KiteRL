@@ -181,10 +181,11 @@ def main(args):
     durat = [np.sum(durations[6:9])/len(beta_tot)*i for i in range(len(beta_tot))]
     plt.plot(durat,alpha_tot,linewidth=1.5)
     plt.plot(durat,bank_tot,linewidth=1.5)
-    plt.vlines(np.cumsum(durations[6:9]), -100, 100, colors='k')
+    xmin, xmax, ymin, ymax=plt.axis()
+    plt.vlines(np.cumsum(durations[6:9]), ymin, ymax, colors='k')
     plt.xlabel("time (s)", fontsize=16)
     plt.ylabel("Angle (deg)", fontsize=16)
-    plt.ylim([-5,15])
+    plt.ylim([ymin,ymax])
     plt.xlim([0, durat[-1]])
 
     plt.legend(['Attack angle', 'Bank Angle',], loc='upper right')
