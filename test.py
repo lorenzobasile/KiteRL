@@ -257,6 +257,7 @@ def test(k, args):
     np.save(args.path+"alpha.npy", alpha)
     np.save(args.path+"bank.npy", bank)
     np.save(args.path+"beta.npy", beta)
+    np.save(args.path+"wind.npy", eff_wind_speed)
 
     mean_performance = os.path.join(args.path,"mean_performance.txt")
             

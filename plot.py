@@ -35,6 +35,7 @@ def main(args):
     alpha=np.load(args.path+"alpha.npy")
     bank=np.load(args.path+"bank.npy")
     beta=np.load(args.path+"beta.npy")
+    wind=np.load(args.path+"wind.npy")
 
 
     fig = plt.figure(figsize=(16, 10))
@@ -201,11 +202,34 @@ def main(args):
             
     durat = [np.sum(durations[6:9])/len(beta_tot)*i for i in range(len(power_tot))]
     plt.plot(durat,power_tot,linewidth=1.5)
-    plt.vlines(np.cumsum(durations[6:9]), -100, 100, colors='k')
+    xmin, xmax, ymin, ymax=plt.axis()
+    plt.vlines(np.cumsum(durations[6:9]), ymin, ymax, colors='k')
     plt.xlabel("time (s)", fontsize=16)
     plt.ylabel("Power (kW)", fontsize=16)
     plt.xlim([0, durat[-1]])
-    plt.ylim([0, 50])
+    plt.ylim([ymin, ymax])
+
+            
+    plt.savefig(file_name, dpi=200)
+            
+    plt.close()
+
+    plt.figure(figsize=(10,6))
+    
+    plt.title("Effective wind speed")
+    file_name = os.path.join(args.path,"wind.png")
+            
+    wind_tot = wind[cumulative_durations[5]:cumulative_durations[8]]
+            
+            
+    durat = [np.sum(durations[6:9])/len(beta_tot)*i for i in range(len(wind_tot))]
+    plt.plot(durat,wind_tot,linewidth=1.5)
+    xmin, xmax, ymin, ymax=plt.axis()
+    plt.vlines(np.cumsum(durations[6:9]), ymin, ymax, colors='k')
+    plt.xlabel("time (s)", fontsize=16)
+    plt.ylabel("Wind (m/s)", fontsize=16)
+    plt.xlim([0, durat[-1]])
+    plt.ylim([ymin, ymax])
 
             
     plt.savefig(file_name, dpi=200)
