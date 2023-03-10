@@ -5,11 +5,11 @@ This repository contains the code used to control by means of model-free Reinfor
 First of all, the `C++` environment `libkite.so` has to be compiled, by executing the command:
 
 ```makefile
-make x86 #to compile on standard x86 systems
-
-make m1 #to compile on Apple silicon macs
+make #to compile on standard x86 systems
 
 make parallel #to enable parallel loading of turbulent flow data (on x86 only)
+
+make m1 #to compile on Apple silicon macs, not recommended
 ```
 
 Learning can be performed by running the command:
