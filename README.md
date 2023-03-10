@@ -20,13 +20,15 @@ python run.py
 
 The specifications of the learning process are enforced by using input parameters:
 
-- `alg`: RL algorithm to be used, either `sarsa `or `dql`;
+- `alg`: RL algorithm to be used, either `sarsa ` or `td3` (`dql` is soon to be deprecated);
 - `path`: Path where to store learning outputs;
 - `wind`: Kind of wind pattern to use, either `const` or `lin` or `turbo`;
 - `episodes` and `duration`: Number of learning episodes and maximum duration of each episode (in seconds);
-- `lr` and `eps`: Initial learning rate and initial exploration rate;
+- `lr` and `eps`: Initial learning rate and initial exploration rate (for SARSA);
+- `actor_lr` and `critic_lr`: learning rates for actor-critic (TD3);
 - `lrstart`and `epsstart`: learning step when to start learning rate and exploration rate decay;
 - `lrrate` and `epsrate`: exponents for the aforementioned decay, shaped as a power law.
+- `step`:  interval between two actions;
 
 Constant and linear wind patterns are generated algorithmically on-the-go, while the turbulent flow data (~14GB) can be downloaded by typing the following command in the `env` folder:
 
@@ -43,7 +45,7 @@ tar zxvf flow.tgz
 After successfully completing a learning process, one can evaluate the learned policy by running:
 
 ```
-python eval.py
+python test.py
 ```
 
 With similar parameters as the other script.
@@ -63,6 +65,7 @@ python run.py --alg=sarsa --wind=turbo --episodes=50000 --eval_episodes=1000  --
 Authors:
 
 - [Lorenzo Basile](https://github.com/lorenzobasile)
+- [Maria Grazia Berni](https://github.com/mariagraziaberni)
 - [Claudio Leone](https://github.com/LionClaude)
 
 Project developed in the group of prof. Antonio Celani (QLS@ICTP, Trieste)
