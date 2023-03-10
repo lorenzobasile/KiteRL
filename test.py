@@ -5,8 +5,8 @@ import learning.pykite as pk
 from learning.utils import *
 import pandas as pd 
 import scipy.interpolate as interpolate
-import matplotlib.pyplot as plt 
 from learning.models import *
+from learning.algorithms import *
 
 ACTION_NOISE = 0.2
 ATTACK_INF_LIM = -5 
@@ -14,8 +14,12 @@ ATTACK_SUP_LIM = 18
 BANK_INF_LIM = -3 
 BANK_SUP_LIM=3
 
+n_attack=pk.coefficients.shape[0]
+n_bank=pk.bank_angles.shape[0]
+n_beta=pk.n_beta
 
-def test(args): 
+
+def test(k, args): 
 
     if(args.range_actions) is not None: 
     
@@ -54,7 +58,6 @@ def test(args):
     
     initial_velocity = pk.vect(0, 0, 0)
     
-    k = pk.kite(initial_position, initial_velocity,args.wind)
     
     if(args.eval_episodes<25): 
     
@@ -64,7 +67,7 @@ def test(args):
     
         EPISODES = args.eval_episodes
         
-    step= args.step 
+    learning_step= args.step 
     
     integration_step = 0.001
     
@@ -72,21 +75,15 @@ def test(args):
     
     episode_duration= int(duration) 
     
-    horizon = int(episode_duration/step) 
+    horizon = int(episode_duration/learning_step) 
     
-    integration_steps_per_learning_step=int(step/integration_step)
+    integration_steps_per_learning_step=int(learning_step/integration_step)
     
-    dir_name_data = os.path.join(args.path,"test")
     
     dir_nets = os.path.join(args.path,"nets")
-    
-    if not os.path.exists(dir_name_data):
-    
-        os.makedirs(dir_name_data)
         
-    file_name = os.path.join(dir_name_data,"average_reward") 
     
-    score_history = [] 
+    rewards = [] 
                 
     time_history = [] 
                 
@@ -106,13 +103,15 @@ def test(args):
     
     power = []
     
-    time_2 = []
+    cumulative_time = []
     
     int_time = 0
-                
-    agent =Agent(3,2,chkpt_dir=dir_nets)#, max_action =range_actions)
+    if args.alg=='td3':
+        agent =Agent(3,2,chkpt_dir=dir_nets)#, max_action =range_actions)
             
-    agent.load_actor() 
+        agent.load_actor() 
+    elif args.alg=='sarsa':
+        Q=np.load(args.path + "best_quality.npy")
     
     eff_wind_speed = []
     
@@ -124,17 +123,21 @@ def test(args):
         
         score = 0 
         
-        k.reset(initial_position, initial_velocity,args.wind)
+        k.reset(initial_position, initial_velocity, args.wind)
         
-        initial_beta = k.beta(continuous=True) 
+        initial_beta = k.beta()
                 
-        S_t=(np.random.uniform(ATTACK_INF_LIM,ATTACK_SUP_LIM), np.random.uniform(BANK_INF_LIM,BANK_SUP_LIM), initial_beta)
-                
-        c_l = f_cl(S_t[0])
+        if k.continuous:
+            S_t=(np.random.uniform(ATTACK_INF_LIM,ATTACK_SUP_LIM), np.random.uniform(BANK_INF_LIM,BANK_SUP_LIM), initial_beta)
+            c_l = f_cl(S_t[0])
         
-        c_d = f_cd(S_t[0])
+            c_d = f_cd(S_t[0])
+            
+            k.update_coefficients_cont(c_l,c_d,S_t[1])
+        else:
+            S_t=(np.random.randint(0,n_attack), np.random.randint(0,n_bank), initial_beta)
+            k.update_coefficients(S_t[0], S_t[1])
         
-        k.update_coefficients_cont(c_l,c_d,S_t[1])
         
         state = np.asarray(S_t) 
             
@@ -142,25 +145,32 @@ def test(args):
                 
         while(not done): 
         
-            time+=step
+            time+=learning_step
                     
             int_time += 1 
-                    
-            action = agent.choose_action(state,0,test=True)
-                    
-            new_attack, new_bank = state[0]+action[0]*range_actions[0],state[1]+action[1]*range_actions[1]
             
-            new_attack = np.clip(new_attack,ATTACK_INF_LIM,ATTACK_SUP_LIM) 
+            if args.alg=='td3':
+                action = agent.choose_action(state,0,test=True)
+                new_attack, new_bank = state[0]+action[0]*range_actions[0],state[1]+action[1]*range_actions[1]
             
-            new_bank = np.clip(new_bank,BANK_INF_LIM,BANK_SUP_LIM)
+                new_attack = np.clip(new_attack,ATTACK_INF_LIM,ATTACK_SUP_LIM) 
+                
+                new_bank = np.clip(new_bank,BANK_INF_LIM,BANK_SUP_LIM)
+                
+                c_l = f_cl(new_attack)
+                        
+                c_d = f_cd(new_attack)
+                        
+                k.update_coefficients_cont(c_l,c_d,new_bank)
+                        
+                sim_status = k.evolve_system_2(integration_steps_per_learning_step,integration_step) 
+            elif args.alg=='sarsa':
+                A_t=greedy_action(Q[S_t])
+                new_attack_angle, new_bank_angle=apply_action(S_t, A_t)
+                sim_status=k.evolve_system(new_attack_angle, new_bank_angle, integration_steps_per_learning_step, integration_step)
+                S_t1 = (new_attack_angle, new_bank_angle, k.beta())
+                    
             
-            c_l = f_cl(new_attack)
-                    
-            c_d = f_cd(new_attack)
-                    
-            k.update_coefficients_cont(c_l,c_d,new_bank)
-                    
-            sim_status = k.evolve_system_2(integration_steps_per_learning_step,integration_step) 
             
             if i<10: 
             
@@ -179,191 +189,46 @@ def test(args):
                 new_state = state 
                 
             else: 
-            
-                new_state = np.asarray((new_attack, new_bank, k.beta(continuous=True)))
-                        
-                reward = k.reward(step)
+                if args.alg=='td3':
+                    new_state = np.asarray((new_attack, new_bank, k.beta()))
+                           
+                reward = k.reward(learning_step)
                 
-            if (count==int(horizon) -1 or k.fullyunrolled()): 
+            if (count==int(horizon)-1 or k.fullyunrolled()): 
             
                 done = True 
                 
             score+=reward 
                     
-            state = new_state 
+            if args.alg=='td3':
+                state = new_state 
+            elif args.alg=='sarsa':
+                S_t=S_t1
              
              
                     
             if i<10: 
-             
-                alpha.append(state[0])
-                bank.append(state[1])
-                beta.append(state[2])
-                power.append((reward/step)*3600)   #KW 
+                if args.alg=='td3':
+                    alpha.append(state[0])
+                    bank.append(state[1])
+                    beta.append(state[2])
+                elif args.alg=='sarsa':
+                    alpha.append(pk.attack_angles[S_t[0]])
+                    bank.append(pk.bank_angles[S_t[1]])
+                    beta.append(S_t[2])
+                power.append((reward/learning_step)*3600)   #KW 
                 eff_wind_speed.append(k.effective_wind_speed())
                  
-        time_2.append(int_time)   
+        cumulative_time.append(int_time)   
                 
-        score_history.append(score) 
+        rewards.append(score) 
         
         time_history.append(time) 
         
         KWh_per_second.append(score/time)
          
      
-    x = [i for i in range(EPISODES)]
-            
-    mean_score = np.asarray(score_history) 
-                
-    mean_score= np.mean(mean_score) 
-                
-    mean_time = np.asarray(time_history) 
-                
-    mean_time = np.mean(mean_time) 
-                
-    mean_power = np.asarray(KWh_per_second)
-                
-    mean_power = np.mean(mean_power)    
-    
-    power_1 = power[:time_2[0]]
-    
-    power_2 = power[time_2[0]:time_2[1]]
-    
-    power_3 = power[time_2[1]:time_2[2]]
-    
-    power_4= power[time_2[2]:time_2[3]]
-    
-    power_1 = runn_average(power_1,5)
-    
-    power_2 = runn_average(power_2,5)
-    
-    power_3 = runn_average(power_3,5)
-    
-    power_4 = runn_average(power_4,5)
-    
-    duration_1 = [step*i for i in range(len(power_1))]
-    
-    duration_2 = [step*i for i in range(len(power_2))]
-    
-    duration_3 = [step*i for i in range(len(power_3))]
-    
-    duration_4= [step*i for i in range(len(power_4))]
-        
-         
-            
-        
-    plt.style.use(['seaborn-whitegrid','tableau-colorblind10'])
-            
-    file_name = os.path.join(dir_name_data,"state_space.png")
-            
-    alpha_tot = alpha[time_2[5]:time_2[8]]
-            
-    bank_tot = bank[time_2[5]:time_2[8]]
-            
-    beta_tot = beta[time_2[5]:time_2[8]]
-    durat = [step*i for i in range(len(beta_tot))]
-    plt.plot(durat,alpha_tot,linewidth=1.5)
-    plt.plot(durat,bank_tot,linewidth=1.5)
-    plt.xlabel("time (s)")
-    plt.ylabel("Angle (deg)")
 
-    plt.legend(['Attack angle', 'Bank Angle',], loc='upper right')
-            
-    plt.savefig(file_name)
-            
-    plt.close()
-    
-    file_name = os.path.join(dir_name_data,"power.png")
-        
-    plt.plot(duration_1,power_1,linewidth=1.5)
-    
-    plt.plot(duration_2,power_2,linewidth=1.5)
-        
-    plt.plot(duration_3,power_3,linewidth=1.5)
-   
-    
-           
-    
-    plt.xlabel('time (s)') 
-    
-    plt.ylabel('Generated Power (kW)')
-    
-    plt.savefig(file_name)
-    
-    plt.close()
-    file_name = os.path.join(dir_name_data,"1_Ep_power.png")
-    plt.plot(duration_2,power_2,linewidth=1.5)
-    plt.xlabel('time (s)') 
-    
-    plt.ylabel('Generated Power (kW)')
-    
-    plt.savefig(file_name)
-    
-    plt.close()
-    file_name = os.path.join(dir_name_data,"Effective_wind_speed_3_ep.png")
-    wind_1 = eff_wind_speed[:time_2[0]]
-    wind_2 =eff_wind_speed[time_2[0]:time_2[1]]
-    wind_3 = eff_wind_speed[time_2[1]:time_2[2]]
-    plt.plot(duration_1,wind_1,linewidth=1.5)
-    
-    plt.plot(duration_2,wind_2,linewidth=1.5)
-        
-    plt.plot(duration_3,wind_3,linewidth=1.5)
-    plt.xlabel('time (s)') 
-    
-    plt.ylabel('Effective wind speed norm (m/s)')
-    
-    plt.savefig(file_name)
-    plt.close()
-    file_name = os.path.join(dir_name_data,"Effective_wind_speed_1_ep.png")
-            
-    
-    plt.plot(duration_2,wind_2,linewidth=1.5)
-        
-            
-    plt.xlabel('time (s)') 
-    
-    plt.ylabel('Effective wind speed norm (m/s)')
-        
-        
-    
-    plt.savefig(file_name)
-    plt.close()
-            
-    file_name = os.path.join(dir_name_data,"duration")
-    
-    times = runn_average(time_history,5)
-    
-           
-        
-    plt.plot(x,times,linewidth=1.5)
-    
-    plt.title("Time required to complete an episode")
-    
-    plt.xlabel("Episode")
-     
-    plt.ylabel("Time (s) ")
-    
-    plt.savefig(file_name)
-    
-    plt.close()
-        
-    scores = runn_average(score_history,10) 
-            
-    file_name = os.path.join(dir_name_data,"energy_production")
-            
-    plt.plot(x,scores,linewidth=1.5)
-            
-    #plt.title("Energy produced in different episodes")
-            
-    plt.xlabel("Episode") 
-            
-    plt.ylabel("KWh ")
-            
-    plt.savefig(file_name)
-            
-    plt.close()
-            
     r = np.array(r)
      
     theta = np.array(theta)
@@ -380,69 +245,29 @@ def test(args):
     
     y=np.multiply(r, np.multiply(np.sin(theta), np.sin(phi)))
     
-    z=np.multiply(r, np.cos(theta)) 
-    
-    for i in range(4): 
-    
-        if(i==0): 
-        
-            xt= x[0:time_2[0]]   
-            
-            yt= y[0:time_2[0]]
-            
-            zt =z[0:time_2[0]] 
-        
-            name_ = "traj_0"
-            
-            file_name = os.path.join(dir_name_data,name_)
-            
-            _ =plot_trajectory(xt,yt,zt,file_name)
-                    
-        else: 
-        
-            xt= x[time_2[i-1]:time_2[i]]   
-            
-            yt= y[time_2[i-1]:time_2[i]] 
-            
-            zt =z[time_2[i-1]:time_2[i]]
-            
-            name_="traj_"+str(i)
-            
-            file_name = os.path.join(dir_name_data,name_)
-            
-            _ = plot_trajectory(xt,yt,zt,file_name)
-                
-                
-    x_ = x[:time_2[2]]
-    y_=y[:time_2[2]]
-    z_=z[:time_2[2]]
-            
-    t_time = [step*i for i in range(len(x_))]
-            
-    file_name = os.path.join(dir_name_data,"coordinate_3_phases.png")
-    plot_distance(x_,y_,z_,t_time,file_name)
-    total_time = [step*i for i in range(len(r))]
-    
-    file_name = os.path.join(dir_name_data,"coordinate_movement.png")
-    
-    plot_distance(x,y,z,total_time,file_name)
-    
-    
-    #print("step",step,"learning rate=",)
-        
-    print("Average reward = ",mean_score)
-                
-    print("Average time = ", mean_time) 
-                
-    print("Average power = ",mean_power, "KWh/s") 
-            
-    mean_performance = os.path.join(dir_name_data,"mean_performance")
+    z=np.multiply(r, np.cos(theta))
+
+
+    np.save(args.path+"durations.npy", np.array(time_history))
+    np.save(args.path+"cumulative_durations.npy", np.array(cumulative_time))
+    np.save(args.path+"power.npy", np.array(power))
+    np.save(args.path+"x.npy", x)
+    np.save(args.path+"y.npy", y)
+    np.save(args.path+"z.npy", z)
+    np.save(args.path+"alpha.npy", alpha)
+    np.save(args.path+"bank.npy", bank)
+    np.save(args.path+"beta.npy", beta)
+
+    mean_performance = os.path.join(args.path,"mean_performance.txt")
             
     with open(mean_performance,'w') as f: 
                 
-        f.write("average reward = "+str(mean_score)+"\n")
-        f.write("average time = "+str(mean_time)+"\n")
-        f.write("average power =" +str(mean_power)+"\n")
+        f.write("average reward = "+str(np.mean(np.asarray(rewards)))+"\n")
+        f.write("average time = "+str(np.mean(np.asarray(time_history)))+"\n")
+        f.write("average power =" +str(np.mean(np.asarray(KWh_per_second)))+"\n")
+
+    
+    
                
                         
                                                 
@@ -463,27 +288,22 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser() 
     
-    parser.add_argument('--episodes',type = int,default=2000) 
-    
-    parser.add_argument('--wind_type',default="const") 
-    
+    parser.add_argument("--path", default="./results/const/")
+    parser.add_argument("--alg", default="sarsa")
+    parser.add_argument("--wind", default="const") #const, lin or turbo
     parser.add_argument('--step',type=float,default=0.1)
-    
-    parser.add_argument('--critic_lr',type = float, default = 0.001) 
-    
-    parser.add_argument('--actor_lr',type = float, default = 0.001) 
-    
-    parser.add_argument('--save_dir',default =  "dati_training/") 
-    
-    parser.add_argument('--test_episodes', type = int, default=500)
-     
-    parser.add_argument('--range_actions',action='append',default = None) 
-    
-    
-    
+    parser.add_argument("--eval_episodes", type=int, default=1e1)
+    parser.add_argument("--duration", type=int, default=300)
+    parser.add_argument('--range_actions',action='append',default = None)  
+
     args = parser.parse_args() 
+    initial_position = pk.vect(np.pi/6, 0, 20)
+    initial_velocity = pk.vect(0, 0, 0)
+    k = pk.kite(initial_position, initial_velocity, args.wind,continuous=(args.alg=='td3'))
     
-    test(args) 
+    
+    
+    test(k, args) 
             
             
         

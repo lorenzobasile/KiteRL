@@ -62,6 +62,9 @@ results/*/data
 results/*/test
 results/*/nets
 
+results/*/*.gif
+
+
 
 *.pdf
 

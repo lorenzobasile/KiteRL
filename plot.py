@@ -22,18 +22,19 @@ class Arrow3D(FancyArrowPatch):
 
 
 def main(args):
-    trajectories=10000
     np.random.seed(0)
     path=args.path
     if not os.path.exists(path):
         exit()
-    coordinates=np.load(path+"eval_traj.npy")
-    durations=np.loadtxt(path+"return_eval.txt", dtype=int, usecols=0)[:trajectories]
-    durations=np.add(durations, 1)
-    coordinates=coordinates[:durations[0]]
-    x=coordinates[:,0]
-    y=coordinates[:,1]
-    z=coordinates[:,2]
+    durations=np.load(args.path+"durations.npy")
+    cumulative_durations=np.load(args.path+"cumulative_durations.npy")
+    power=np.load(args.path+"power.npy")
+    x=np.load(args.path+"x.npy")[:cumulative_durations[0]]
+    y=np.load(args.path+"y.npy")[:cumulative_durations[0]]
+    z=np.load(args.path+"z.npy")[:cumulative_durations[0]]
+    alpha=np.load(args.path+"alpha.npy")
+    bank=np.load(args.path+"bank.npy")
+    beta=np.load(args.path+"beta.npy")
 
 
     fig = plt.figure(figsize=(16, 10))
@@ -89,7 +90,7 @@ def main(args):
     plt.savefig(path+"3d_trajectory_frame.png", bbox_inches='tight', dpi=200)
     #plt.show()
 
-
+    
 
 
     # References
@@ -118,7 +119,7 @@ def main(args):
 
 
     # THE DATA POINTS
-
+    
     dataSet = np.array([x, y, z])
     numDataPoints = len(z)
 
@@ -163,13 +164,62 @@ def main(args):
     # Creating the Animation object
     line_ani = animation.FuncAnimation(fig, func, frames=numDataPoints, fargs=(dataSet,line,redDots), interval=200, blit=False)
     line_ani.save(path+'animation.gif')
+    plt.close()
 
+
+    plt.style.use(['seaborn-whitegrid','tableau-colorblind10'])
+    plt.figure(figsize=(10,6))
+    plt.title("Control variables")
+    file_name = os.path.join(args.path,"policy.png")
+            
+    alpha_tot = alpha[cumulative_durations[5]:cumulative_durations[8]]
+            
+    bank_tot = bank[cumulative_durations[5]:cumulative_durations[8]]
+            
+    beta_tot = beta[cumulative_durations[5]:cumulative_durations[8]]
+    durat = [np.sum(durations[6:9])/len(beta_tot)*i for i in range(len(beta_tot))]
+    plt.plot(durat,alpha_tot,linewidth=1.5)
+    plt.plot(durat,bank_tot,linewidth=1.5)
+    plt.vlines(np.cumsum(durations[6:9]), -100, 100, colors='k')
+    plt.xlabel("time (s)", fontsize=16)
+    plt.ylabel("Angle (deg)", fontsize=16)
+    plt.ylim([-5,15])
+    plt.xlim([0, durat[-1]])
+
+    plt.legend(['Attack angle', 'Bank Angle',], loc='upper right')
+            
+    plt.savefig(file_name, dpi=200)
+            
+    plt.close()
+
+    plt.figure(figsize=(10,6))
+    plt.title("Produced power")
+    file_name = os.path.join(args.path,"power.png")
+            
+    power_tot = power[cumulative_durations[5]:cumulative_durations[8]]
+            
+            
+    durat = [np.sum(durations[6:9])/len(beta_tot)*i for i in range(len(power_tot))]
+    plt.plot(durat,power_tot,linewidth=1.5)
+    plt.vlines(np.cumsum(durations[6:9]), -100, 100, colors='k')
+    plt.xlabel("time (s)", fontsize=16)
+    plt.ylabel("Power (kW)", fontsize=16)
+    plt.xlim([0, durat[-1]])
+    plt.ylim([0, 50])
+
+            
+    plt.savefig(file_name, dpi=200)
+            
+    plt.close()
 
     #plt.show()
 
-
+    
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--path", default="./results/const/")
     args = parser.parse_args()
-    main(args)
+    main(args)        
+         
+            
+        

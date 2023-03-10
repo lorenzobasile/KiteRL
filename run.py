@@ -1,10 +1,10 @@
 import numpy as np
 from learning.algorithms import *
 from learning.models import NN
-from learning.eval import eval
 from argparse import ArgumentParser
 import sys
 import os
+import matplotlib.pyplot as plt
 from test import test 
 
 
@@ -20,29 +20,53 @@ def main(args):
     window_size = 30
     initial_position = pk.vect(np.pi/6, 0, 20)
     initial_velocity = pk.vect(0, 0, 0)
-    k = pk.kite(initial_position, initial_velocity, args.wind)
+    
     
     if args.alg == 'sarsa':
+        k = pk.kite(initial_position, initial_velocity, args.wind,continuous=False)
         Q = np.ones((n_attack, n_bank, n_beta, 3, 3))*0
         Q_traj, Q, durations, rewards = sarsa(k, Q, args, initial_position, initial_velocity)
         np.save(path + "best_quality", Q)
         np.save(path + "quality_traj", Q_traj)
+        test(k, args)
         
     elif args.alg == 'td3': 
+        k = pk.kite(initial_position, initial_velocity, args.wind,continuous=True)
         durations, rewards = td3(k, args, initial_position, initial_velocity) 
-        test(args)
+        test(k, args)
         
     else:
+        k = pk.kite(initial_position, initial_velocity, args.wind,continuous=True)
         net = NN()
         net, durations, rewards = dql(k, net, args, initial_position, initial_velocity)
         torch.save(net.state_dict(), path + "best_weights.h5")
+
+    plt.figure(figsize=(10,6))
+    plt.title("Cumulative reward")
+    plt.xlabel('Episodes', fontsize=16)
+    plt.ylabel('Energy (kWh)', fontsize=16)
+    plt.plot(rewards, 'o')
+
+    smooth = np.convolve(rewards, np.ones(100), "valid")/100
+    plt.plot(smooth, color='red', lw=1)
+    plt.savefig(args.path+'return.png', dpi=200)
+    plt.show()
+
+    
+    plt.figure(figsize=(10,6))
+    plt.xlabel('Episodes', fontsize=16)
+    plt.ylabel('Duration (s)', fontsize=16)
+    plt.plot(durations, 'o')
+    smooth = np.convolve(durations, np.ones(100), "valid")/100
+    plt.plot(smooth, color='red', lw=1)
+    plt.savefig(args.path+'durations.png', dpi=200)
+    plt.show()
 
 
     with open(path + "return.txt", "w") as file:
         for i in range(len(durations)):
             file.write(str(durations[i]) + "\t" + str(rewards[i]) + "\n")
     
-    eval(args, k)
 
 if __name__ == "__main__":
     parser = ArgumentParser()

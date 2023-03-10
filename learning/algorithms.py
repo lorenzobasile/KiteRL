@@ -16,7 +16,6 @@ n_states=3
 n_actions=2
 penalty=0.1
 integration_step=0.001
-learning_step=0.2
 
 
 def apply_action(state, action):
@@ -100,7 +99,7 @@ def dql_episode(k, net, optimizer, experience_buffer, loss, args, initial_positi
     eta_start=args.lrstart
     batch_size=1
     cumulative_reward=0
-    S_t=(np.random.randint(0,n_attack), np.random.randint(0,n_bank), k.beta(continuous=True))
+    S_t=(np.random.randint(0,n_attack), np.random.randint(0,n_bank), k.beta())
     k.update_coefficients(S_t[0], S_t[1])
     tensor_state=torch.tensor(S_t).float()
     tensor_state[0]-=(n_attack/2)
@@ -129,7 +128,7 @@ def dql_episode(k, net, optimizer, experience_buffer, loss, args, initial_positi
                 #torch.nn.utils.clip_grad_norm_(net.parameters(), 1)
                 optimizer.step()
             break
-        S_t1 = (new_attack_angle, new_bank_angle, k.beta(continuous=True))
+        S_t1 = (new_attack_angle, new_bank_angle, k.beta())
         new_tensor_state=torch.tensor(S_t1).float()
         new_tensor_state[0]-=(n_attack/2)
         new_tensor_state[1]-=(n_bank/2)
@@ -180,6 +179,7 @@ def sarsa(k, Q, args, initial_position, initial_velocity):
     visits=np.zeros_like(Q, dtype='int')
     durations=[]
     rewards=[]
+    learning_step=args.step
     eta0=args.lr
     eps0=args.eps
     eps_exp=args.epsrate
@@ -288,7 +288,7 @@ def td3(k, args, initial_position, initial_velocity):
     
     a_lr = args.actor_lr
     
-    step= args.step 
+    learning_step= args.step 
     
     integration_step = 0.001 
     
@@ -296,9 +296,9 @@ def td3(k, args, initial_position, initial_velocity):
     
     episode_duration= int(duration) 
     
-    horizon = int(episode_duration/step) 
+    horizon = int(episode_duration/learning_step) 
     
-    integration_steps_per_learning_step=int(step/integration_step)
+    integration_steps_per_learning_step=int(learning_step/integration_step)
     
     dir_name = os.path.join(args.path,"data")
     
@@ -322,6 +322,7 @@ def td3(k, args, initial_position, initial_velocity):
     agent.manual_initialization()
     
     for i in range(EPISODES): 
+        print(i, end='\r')
     
         done = False 
         
@@ -329,7 +330,7 @@ def td3(k, args, initial_position, initial_velocity):
         
         k.reset(initial_position, initial_velocity, args.wind) 
         
-        initial_beta = k.beta(continuous=True) 
+        initial_beta = k.beta() 
         
         S_t=(np.random.uniform(ATTACK_INF_LIM,ATTACK_SUP_LIM), np.random.uniform(BANK_INF_LIM,BANK_SUP_LIM), initial_beta)
         
@@ -374,9 +375,9 @@ def td3(k, args, initial_position, initial_velocity):
                 
             else: 
             
-                new_state = np.asarray((new_attack, new_bank, k.beta(continuous=True)))
+                new_state = np.asarray((new_attack, new_bank, k.beta()))
                 
-                reward = k.reward(step) 
+                reward = k.reward(learning_step) 
                 
             if (count==int(horizon) -1 or k.fullyunrolled()): 
                 

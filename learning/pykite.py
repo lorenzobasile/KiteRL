@@ -1,6 +1,8 @@
 from ctypes import *
 import numpy as np
 
+attack_angles=np.array([-2, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20])
+
 coefficients=np.array([
     #[-0.15, 0.005],
     #[-0.05, 0.005],
@@ -44,13 +46,14 @@ class kite(Structure):
         ('psi', c_double),
         ('time', c_double)
     ]
-    def __init__(self, initial_pos, initial_vel, wind_type):
+    def __init__(self, initial_pos, initial_vel, wind_type, continuous):
         self.position=initial_pos
         self.velocity=initial_vel
         self.C_l=0.35
         self.C_d=0.01
         self.psi=0
         self.time=0
+        self.continuous=continuous
         if wind_type=='turbo':
             libkite.init_turbo_wind(pointer(self))
         if wind_type=='lin':
@@ -74,8 +77,8 @@ class kite(Structure):
         return libkite.simulate(pointer(self), integration_steps, step)
     def evolve_system_2(self,integration_steps, step):
         return libkite.simulate(pointer(self), integration_steps, step)
-    def beta(self, continuous=True):
-        if continuous:
+    def beta(self):
+        if self.continuous:
             return libkite.getbeta(pointer(self))
         else:
             return max(min(np.digitize(libkite.getbeta(pointer(self)), np.linspace(-np.pi/2, np.pi/2, n_beta+1))-1, n_beta-1), 0)
