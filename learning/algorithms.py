@@ -244,6 +244,7 @@ ATTACK_INF_LIM = -5
 ATTACK_SUP_LIM = 18 
 BANK_INF_LIM = -3 
 BANK_SUP_LIM=3
+R_A=20
 
 
 
@@ -321,6 +322,8 @@ def td3(k, args, initial_position, initial_velocity):
     
     agent.manual_initialization()
     
+    counter = 0
+    
     for i in range(EPISODES): 
         print(i, end='\r')
     
@@ -347,6 +350,8 @@ def td3(k, args, initial_position, initial_velocity):
         while not done: 
         
             count +=1 
+            
+            counter+=1
             
             action = agent.choose_action(state,ACTION_NOISE)
             
@@ -394,13 +399,15 @@ def td3(k, args, initial_position, initial_velocity):
             
         rewards.append(score) 
         
-        avg_score = np.mean(rewards[-20:])
+        avg_score = np.mean(rewards[-R_A:])
         
-        if avg_score > best_score: 
+        if counter > agent.warmup + R_A:
+        
+            if avg_score > best_score: 
                    
-            best_score = avg_score 
+                best_score = avg_score 
                        
-            agent.save_models() 
+                agent.save_models() 
             
             
     

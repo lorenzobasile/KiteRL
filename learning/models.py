@@ -275,7 +275,7 @@ class ActorNetwork(nn.Module):
          
 class Agent: 
     
-    def __init__(self, input_dims, n_actions, critic_lr=0.0005, actor_lr = 0.0005, tau = 0.005, gamma = 0.99, update_actor_interval =2, warmup = 1000, 
+    def __init__(self, input_dims, n_actions, critic_lr=0.0005, actor_lr = 0.0005, tau = 0.005, gamma = 0.99, update_actor_interval =2, warmup = 50000, 
                  max_size=1000000, layer1_size= 400, layer2_size = 300, batch_size=100,target_noise = 0.2, chkpt_dir= "const_training_standards",device = None, max_action = None):
                  
                  
@@ -338,6 +338,7 @@ class Agent:
         self.min_value = 0
         
         self.max_value = 0
+  
         
     def manual_initialization(self): 
     
